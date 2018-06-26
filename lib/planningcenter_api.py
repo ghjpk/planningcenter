@@ -1,9 +1,7 @@
 #!/usr/bin/python
 
 import requests
-import openlp
 import re
-from datetime import datetime
 from openlp.plugins.planningcenter.lib.planningcenter_auth import pco_application_id, pco_secret
 
 class PlanningCenterAPI:

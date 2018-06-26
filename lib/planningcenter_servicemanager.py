@@ -18,14 +18,6 @@ class ServiceManager:
     def AddServiceItem(self,service_item):
         self.openlp_data.append(service_item.openlp_data)
 
-# class Verse:
-#     def __init__(self, verse_tag, verse_title, raw_slide):
-#         verse = {}
-#         
-#         self.verseTag = verse_tag
-#         self.title = verse_title
-#         self.raw_slide = raw_slide
-
 class ServiceItem:
     def __init__(self):
 
