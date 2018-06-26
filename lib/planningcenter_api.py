@@ -1,7 +1,6 @@
-#!/usr/bin/python
-
-import requests
+import urllib.request
 import re
+from json import loads
 from openlp.plugins.planningcenter.lib.planningcenter_auth import pco_application_id, pco_secret
 
 class PlanningCenterAPI:
@@ -9,8 +8,22 @@ class PlanningCenterAPI:
         self.api_url = "https://api.planningcenteronline.com/services/v2/"
         
     def GetFromServicesAPI(self,url_suffix):
-        apiResponse = requests.get(self.api_url+url_suffix, auth=(pco_application_id,pco_secret)).json()
-        return apiResponse
+        # create a password manager
+        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+        # Add the username and password.
+        # If we knew the realm, we could use it instead of None.
+        password_mgr.add_password(None, self.api_url, pco_application_id, pco_secret)
+        handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
+        # create "opener" (OpenerDirector instance)
+        opener = urllib.request.build_opener(handler)
+        # use the opener to fetch a URL
+        opener.open(self.api_url+url_suffix)
+        # Install the opener.
+        # Now all calls to urllib.request.urlopen use our opener.
+        urllib.request.install_opener(opener)
+        api_response_string = urllib.request.urlopen(self.api_url+url_suffix, timeout=30).read()
+        api_response_object = loads(api_response_string)
+        return api_response_object
         
     def GetServiceTypeList(self):
         # Get ServiceTypes
