@@ -2,12 +2,16 @@ import urllib.request
 import re
 from json import loads
 from openlp.plugins.planningcenter.lib.planningcenter_auth import pco_application_id, pco_secret
+import ssl
 
 class PlanningCenterAPI:
     def __init__(self):
         self.api_url = "https://api.planningcenteronline.com/services/v2/"
         
     def GetFromServicesAPI(self,url_suffix):
+        import os, ssl
+        if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)): 
+            ssl._create_default_https_context = ssl._create_unverified_context
         # create a password manager
         password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
         # Add the username and password.
@@ -22,7 +26,7 @@ class PlanningCenterAPI:
         # Now all calls to urllib.request.urlopen use our opener.
         urllib.request.install_opener(opener)
         api_response_string = urllib.request.urlopen(self.api_url+url_suffix, timeout=30).read()
-        api_response_object = loads(api_response_string)
+        api_response_object = loads(api_response_string.decode('utf-8'))
         return api_response_object
         
     def GetServiceTypeList(self):

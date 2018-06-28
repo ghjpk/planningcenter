@@ -25,13 +25,21 @@ The :mod:`~openlp.plugins.planningcenter.planningcenterplugin` module contains t
 for the PlanningCenter plugin.
 """
 
+
 import logging
+log = logging.getLogger(__name__)
+
+import sys
+if 'openlp.plugins.planningcenter' not in sys.modules:
+	__import__('plugins.planningcenter')
+	sys.modules['openlp.plugins.planningcenter'] = sys.modules.pop('plugins.planningcenter')
+
 from openlp.core.common import Registry, translate
 from openlp.core.lib import Plugin, StringContent
 from openlp.core.lib.ui import create_action
 from openlp.plugins.planningcenter.forms.planningcenterform import PlanningCenterForm
 
-log = logging.getLogger(__name__)
+
 __default_settings__ = {
     'planningcenter/some default': 'default setting',
 }
