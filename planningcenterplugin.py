@@ -29,10 +29,22 @@ for the PlanningCenter plugin.
 import logging
 log = logging.getLogger(__name__)
 
-import sys
-if 'openlp.plugins.planningcenter' not in sys.modules:
-	__import__('plugins.planningcenter')
-	sys.modules['openlp.plugins.planningcenter'] = sys.modules.pop('plugins.planningcenter')
+""" 
+When running the plugin from within a compiled, pyinstaller package (MacOS/Windows),
+any attempt to import a module from a subdirectory of openlp.plugins.planningcenter
+will fail with an ImportError saying that 'openlp.plugins.planningcenter' does not
+exist.  This does not occur when running the code directly from python.  
+In the compiled environment, you can import from 'plugins.planningcenter', but this fails
+in a source-code environment.  Thus, the solution below.  
+First, try importing 'openlp.plugins.planningcenter' directly as a module.  
+If this fails with an ImportError, then import 'plugins.planningcenter' and 
+then move the instantiated module to the name, 'openlp.plugins.planningcenter'.
+"""
+try:
+    __import__('openlp.plugins.planningcenter')
+except ImportError:
+    __import__('plugins.planningcenter')
+    sys.modules['openlp.plugins.planningcenter'] = sys.modules.pop('plugins.planningcenter')
 
 from openlp.core.common import Registry, translate
 from openlp.core.lib import Plugin, StringContent
