@@ -176,8 +176,6 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         self.service_manager.application.set_normal_cursor()
         self.service_manager.repaint_service_list(-1, -1)
         self.done(QtWidgets.QDialog.Accepted)
-
-        print("woohoo!")
         
     def on_update_button_clicked(self):
         """
