@@ -91,6 +91,7 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         self.service_type_combo_box.currentIndexChanged.disconnect()
         self.plan_selection_combo_box.currentIndexChanged.disconnect()
         self.import_as_new_button.clicked.disconnect()
+        self.append_to_existing_button.clicked.disconnect()
         return QtWidgets.QDialog.done(self, r)
 
     def on_service_type_combobox_changed(self):
@@ -126,9 +127,9 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
             self.append_to_existing_button.setEnabled(True)
 
     def on_append_to_existing_button_clicked(self):
-        self.on_import_as_new_button_clicked(False)
+        self.on_import_as_new_button_clicked(True)
 
-    def on_import_as_new_button_clicked(self, create_new_service=True):
+    def on_import_as_new_button_clicked(self, append = False):
         """
         Create a new service and import all of the PCO items into it
         """
@@ -140,7 +141,7 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         datetime_object = datetime.strptime(self.plan_selection_combo_box.currentText(), '%B %d, %Y' )
         plan_date = datetime.strftime(datetime_object, '%Y%m%d')
         service_manager = Registry().get('service_manager')
-        if create_new_service:
+        if not append:
             service_manager.on_new_service_clicked()
         planning_center_service_manager = ServiceManager(plan_date)
         # convert the planning center dict to a list of openlp items
