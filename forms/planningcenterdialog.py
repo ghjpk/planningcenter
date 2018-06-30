@@ -48,7 +48,7 @@ class Ui_PlanningCenterDialog(object):
         self.stacked_widget.addWidget(self.plan_selection_page)
         
         self.plan_selection_layout = QtWidgets.QFormLayout(self.plan_selection_page)
-        self.plan_selection_layout.setContentsMargins(120, 100, 120, 100)
+        self.plan_selection_layout.setContentsMargins(120, 80, 120, 80)
         self.plan_selection_layout.setSpacing(8)
         self.plan_selection_layout.setObjectName('plan_selection_layout')
         
@@ -78,6 +78,21 @@ class Ui_PlanningCenterDialog(object):
         self.plan_selection_layout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.plan_selection_combo_box)
         self.plan_selection_label.setBuddy(self.plan_selection_combo_box)   
         
+        # Theme List for Songs and Custom Slides
+        self.song_theme_selection_label = QtWidgets.QLabel(self.plan_selection_page)
+        self.song_theme_selection_label.setObjectName('song_theme_selection_label')
+        self.plan_selection_layout.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.song_theme_selection_label)
+        self.song_theme_selection_combo_box = QtWidgets.QComboBox(self.plan_selection_page)
+        self.song_theme_selection_combo_box.setObjectName('song_theme_selection_combo_box')
+        self.plan_selection_layout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.song_theme_selection_combo_box)
+        self.song_theme_selection_label.setBuddy(self.song_theme_selection_combo_box)
+        self.slide_theme_selection_label = QtWidgets.QLabel(self.plan_selection_page)
+        self.slide_theme_selection_label.setObjectName('slide_theme_selection_label')
+        self.plan_selection_layout.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.slide_theme_selection_label)
+        self.slide_theme_selection_combo_box = QtWidgets.QComboBox(self.plan_selection_page)
+        self.slide_theme_selection_combo_box.setObjectName('slide_theme_selection_combo_box')
+        self.plan_selection_layout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.slide_theme_selection_combo_box)
+        
         # Import Button
         self.import_button_layout = QtWidgets.QHBoxLayout()
         self.import_button_layout.setSpacing(8)
@@ -89,7 +104,7 @@ class Ui_PlanningCenterDialog(object):
         self.append_to_existing_button = QtWidgets.QPushButton(self.plan_selection_page)
         self.append_to_existing_button.setObjectName('append_to_existing_button')
         self.import_button_layout.addWidget(self.append_to_existing_button)
-        self.plan_selection_layout.setLayout(3, QtWidgets.QFormLayout.FieldRole, self.import_button_layout)    
+        self.plan_selection_layout.setLayout(5, QtWidgets.QFormLayout.FieldRole, self.import_button_layout)    
         self.retranslate_ui(planningcenter_dialog)
         self.stacked_widget.setCurrentIndex(0)
 
@@ -108,3 +123,5 @@ class Ui_PlanningCenterDialog(object):
         self.import_as_new_button.setToolTip(translate('PlanningCenterPlugin.PlanningCenterForm', 'Import As New Service'))
         self.append_to_existing_button.setText(translate('PlanningCenterPlugin.PlanningCenterForm', 'Append'))
         self.append_to_existing_button.setToolTip(translate('PlanningCenterPlugin.PlanningCenterForm', 'Append To Existing Service'))
+        self.song_theme_selection_label.setText(translate('PlanningCenterPlugin.PlanningCenterForm', 'Song Theme'))
+        self.slide_theme_selection_label.setText(translate('PlanningCenterPlugin.PlanningCenterForm', 'Slide Theme'))

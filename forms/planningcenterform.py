@@ -25,7 +25,7 @@ The :mod:`~openlp.plugins.planningcenter.forms.planningcenterform` module contai
 """
 
 import logging
-from datetime import datetime
+from datetime import date, datetime
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -78,6 +78,12 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
             self.service_type_combo_box.addItem(service_type['attributes']['name'],service_type['id'])
         self.service_type_combo_box.setCurrentIndex(0)
         self.on_plan_selection_combobox_changed()
+        
+        # Set the 2 lists of themes
+        theme_manager = Registry().get('theme_manager')
+        for theme in theme_manager.get_themes():
+            self.song_theme_selection_combo_box.addItem(theme)
+            self.slide_theme_selection_combo_box.addItem(theme)
 
         return QtWidgets.QDialog.exec(self)
 
@@ -105,12 +111,16 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
             self.plan_selection_combo_box.clear()
             self.plan_selection_combo_box.addItem('Select Plan Date')
             self.plan_selection_combo_box.setCurrentIndex(0)
+            
             # Get Today's date and see if it is listed... if it is, then select it in the combobox
-            date_string = "{dt:%B} {dt.day}, {dt.year}".format(dt=datetime.today())
             for plan in plan_list:
-                combo_box_index = self.plan_selection_combo_box.addItem(plan['attributes']['dates'],plan['id'])
-                if date_string == plan['attributes']['dates']:
-                    self.plan_selection_combo_box.setCurrentIndex(combo_box_index)
+                self.plan_selection_combo_box.addItem(plan['attributes']['dates'],plan['id'])
+                # dates=str: July 29, 2018
+                plan_datetime = datetime.strptime(plan['attributes']['dates'],'%B %d, %Y')
+                plan_date = date(plan_datetime.year, plan_datetime.month, plan_datetime.day)
+                # if we have any date that matches today or in the future, select it
+                if plan_date >= date.today():
+                    self.plan_selection_combo_box.setCurrentIndex(self.plan_selection_combo_box.count()-1)
                     self.import_as_new_button.setEnabled(True)
                     self.append_to_existing_button.setEnabled(True)
                 
@@ -165,9 +175,11 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
                     if len(song_data) and len(arrangement_data):
                         break
                     
-                author = song_data['attributes']['author']   
+                author = song_data['attributes']['author']
                 if author is None:
                     author = "Unknown"
+                author = author.lstrip()
+                author = author.rstrip() 
         
                 lyrics = arrangement_data['attributes']['lyrics']
                 arrangement_updated_at = arrangement_data['attributes']['updated_at']
@@ -177,11 +189,11 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
                 verses = SplitLyricsIntoVerses(lyrics)
                 
                 song = Song(item_title,author,verses,arrangement_updated_at)
-                #song.SetTheme(self.m_songThemeComboBox.GetStringSelection())
+                song.SetTheme(self.song_theme_selection_combo_box.currentText())
                 planning_center_service_manager.AddServiceItem(song)
             else:
                 custom_slide = CustomSlide(item_title)
-                #custom_slide.SetTheme(self.m_slideThemeComboBox.GetStringSelection())
+                custom_slide.SetTheme(self.slide_theme_selection_combo_box.currentText())
                 planning_center_service_manager.AddServiceItem(custom_slide)
 
         service_manager.set_file_name(plan_date)
