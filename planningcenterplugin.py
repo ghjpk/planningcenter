@@ -25,7 +25,6 @@ The :mod:`~openlp.plugins.planningcenter.planningcenterplugin` module contains t
 for the PlanningCenter plugin.
 """
 
-
 import logging
 log = logging.getLogger(__name__)
 
@@ -40,6 +39,7 @@ First, try importing 'openlp.plugins.planningcenter' directly as a module.
 If this fails with an ImportError, then import 'plugins.planningcenter' and 
 then move the instantiated module to the name, 'openlp.plugins.planningcenter'.
 """
+import sys
 try:
     __import__('openlp.plugins.planningcenter')
 except ImportError:

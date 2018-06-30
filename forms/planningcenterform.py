@@ -47,23 +47,26 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         self.plugin = plugin
         self.db_manager = db_manager
         self.setup_ui(self)
-        self.service_manager = parent.service_manager
 
     def initialise(self):
         """
         Initialise the PlanningCenterForm
         """
-        self.service_type_combo_box.currentIndexChanged.connect(self.on_service_type_combobox_changed)
-        self.plan_selection_combo_box.currentIndexChanged.connect(self.on_plan_selection_combobox_changed)
-        self.import_as_new_button.clicked.connect(self.on_import_as_new_button_clicked)
+        return True
+
 
     def exec(self):
         """
         Execute the dialog. This method sets everything back to its initial
         values.
         """
+        self.service_type_combo_box.currentIndexChanged.connect(self.on_service_type_combobox_changed)
+        self.plan_selection_combo_box.currentIndexChanged.connect(self.on_plan_selection_combobox_changed)
+        self.import_as_new_button.clicked.connect(self.on_import_as_new_button_clicked)
+        self.append_to_existing_button.clicked.connect(self.on_append_to_existing_button_clicked)
         self.stacked_widget.setCurrentIndex(0)
         self.import_as_new_button.setEnabled(False)
+        self.append_to_existing_button.setEnabled(False)
         
         # create an Planning Center API Object
         self.planning_center_api = PlanningCenterAPI()
@@ -85,6 +88,9 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         :param r: The result of the dialog.
         """
         log.debug('Closing PlanningCenterForm')
+        self.service_type_combo_box.currentIndexChanged.disconnect()
+        self.plan_selection_combo_box.currentIndexChanged.disconnect()
+        self.import_as_new_button.clicked.disconnect()
         return QtWidgets.QDialog.done(self, r)
 
     def on_service_type_combobox_changed(self):
@@ -93,17 +99,19 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         """
         # set the Plan Dropdown Box from PCO
         service_type_id = self.service_type_combo_box.itemData(self.service_type_combo_box.currentIndex())
-        plan_list = self.planning_center_api.GetPlanList(service_type_id)
-        self.plan_selection_combo_box.clear()
-        self.plan_selection_combo_box.addItem('Select Plan Date')
-        self.plan_selection_combo_box.setCurrentIndex(0)
-        # Get Today's date and see if it is listed... if it is, then select it in the combobox
-        date_string = "{dt:%B} {dt.day}, {dt.year}".format(dt=datetime.today())
-        for plan in plan_list:
-            combo_box_index = self.plan_selection_combo_box.addItem(plan['attributes']['dates'],plan['id'])
-            if date_string == plan['attributes']['dates']:
-                self.plan_selection_combo_box.setCurrentIndex(combo_box_index)
-                self.import_as_new_button.setEnabled(True)
+        if service_type_id:
+            plan_list = self.planning_center_api.GetPlanList(service_type_id)
+            self.plan_selection_combo_box.clear()
+            self.plan_selection_combo_box.addItem('Select Plan Date')
+            self.plan_selection_combo_box.setCurrentIndex(0)
+            # Get Today's date and see if it is listed... if it is, then select it in the combobox
+            date_string = "{dt:%B} {dt.day}, {dt.year}".format(dt=datetime.today())
+            for plan in plan_list:
+                combo_box_index = self.plan_selection_combo_box.addItem(plan['attributes']['dates'],plan['id'])
+                if date_string == plan['attributes']['dates']:
+                    self.plan_selection_combo_box.setCurrentIndex(combo_box_index)
+                    self.import_as_new_button.setEnabled(True)
+                    self.append_to_existing_button.setEnabled(True)
                 
     def on_plan_selection_combobox_changed(self):
         """
@@ -112,10 +120,15 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         current_index = self.plan_selection_combo_box.currentIndex()
         if current_index == 0 or current_index == -1:
             self.import_as_new_button.setEnabled(False)
+            self.append_to_existing_button.setEnabled(False)
         else:
             self.import_as_new_button.setEnabled(True)
+            self.append_to_existing_button.setEnabled(True)
 
-    def on_import_as_new_button_clicked(self):
+    def on_append_to_existing_button_clicked(self):
+        self.on_import_as_new_button_clicked(False)
+
+    def on_import_as_new_button_clicked(self, create_new_service=True):
         """
         Create a new service and import all of the PCO items into it
         """
@@ -126,8 +139,9 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         # create a YYYYMMDD plan_date 
         datetime_object = datetime.strptime(self.plan_selection_combo_box.currentText(), '%B %d, %Y' )
         plan_date = datetime.strftime(datetime_object, '%Y%m%d')
-        
-        self.service_manager.on_new_service_clicked()
+        service_manager = Registry().get('service_manager')
+        if create_new_service:
+            service_manager.on_new_service_clicked()
         planning_center_service_manager = ServiceManager(plan_date)
         # convert the planning center dict to a list of openlp items
         for item in planning_center_items_dict['data']:
@@ -169,12 +183,12 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
                 #custom_slide.SetTheme(self.m_slideThemeComboBox.GetStringSelection())
                 planning_center_service_manager.AddServiceItem(custom_slide)
 
-        self.service_manager.set_file_name(plan_date)
-        self.service_manager.main_window.display_progress_bar(len(planning_center_service_manager.openlp_data))
-        self.service_manager.process_service_items(planning_center_service_manager.openlp_data)
-        self.service_manager.main_window.finished_progress_bar()
-        self.service_manager.application.set_normal_cursor()
-        self.service_manager.repaint_service_list(-1, -1)
+        service_manager.set_file_name(plan_date)
+        service_manager.main_window.display_progress_bar(len(planning_center_service_manager.openlp_data))
+        service_manager.process_service_items(planning_center_service_manager.openlp_data)
+        service_manager.main_window.finished_progress_bar()
+        service_manager.application.set_normal_cursor()
+        service_manager.repaint_service_list(-1, -1)
         self.done(QtWidgets.QDialog.Accepted)
         
     def on_update_button_clicked(self):
