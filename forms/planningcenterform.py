@@ -25,6 +25,7 @@ The :mod:`~openlp.plugins.planningcenter.forms.planningcenterform` module contai
 """
 
 import logging
+import re
 from datetime import date, datetime
 
 from PyQt5 import QtCore, QtWidgets
@@ -63,10 +64,10 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         self.service_type_combo_box.currentIndexChanged.connect(self.on_service_type_combobox_changed)
         self.plan_selection_combo_box.currentIndexChanged.connect(self.on_plan_selection_combobox_changed)
         self.import_as_new_button.clicked.connect(self.on_import_as_new_button_clicked)
-        self.append_to_existing_button.clicked.connect(self.on_append_to_existing_button_clicked)
+        self.update_existing_button.clicked.connect(self.on_update_existing_button_clicked)
         self.stacked_widget.setCurrentIndex(0)
         self.import_as_new_button.setEnabled(False)
-        self.append_to_existing_button.setEnabled(False)
+        self.update_existing_button.setEnabled(False)
         
         # create an Planning Center API Object
         self.planning_center_api = PlanningCenterAPI()
@@ -97,7 +98,7 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         self.service_type_combo_box.currentIndexChanged.disconnect()
         self.plan_selection_combo_box.currentIndexChanged.disconnect()
         self.import_as_new_button.clicked.disconnect()
-        self.append_to_existing_button.clicked.disconnect()
+        self.update_existing_button.clicked.disconnect()
         return QtWidgets.QDialog.done(self, r)
 
     def on_service_type_combobox_changed(self):
@@ -122,7 +123,7 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
                 if plan_date >= date.today():
                     self.plan_selection_combo_box.setCurrentIndex(self.plan_selection_combo_box.count()-1)
                     self.import_as_new_button.setEnabled(True)
-                    self.append_to_existing_button.setEnabled(True)
+                    self.update_existing_button.setEnabled(True)
                 
     def on_plan_selection_combobox_changed(self):
         """
@@ -131,15 +132,15 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         current_index = self.plan_selection_combo_box.currentIndex()
         if current_index == 0 or current_index == -1:
             self.import_as_new_button.setEnabled(False)
-            self.append_to_existing_button.setEnabled(False)
+            self.update_existing_button.setEnabled(False)
         else:
             self.import_as_new_button.setEnabled(True)
-            self.append_to_existing_button.setEnabled(True)
+            self.update_existing_button.setEnabled(True)
 
-    def on_append_to_existing_button_clicked(self):
+    def on_update_existing_button_clicked(self):
         self.on_import_as_new_button_clicked(True)
 
-    def on_import_as_new_button_clicked(self, append = False):
+    def on_import_as_new_button_clicked(self, update = False):
         """
         Create a new service and import all of the PCO items into it
         """
@@ -151,7 +152,11 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         datetime_object = datetime.strptime(self.plan_selection_combo_box.currentText(), '%B %d, %Y' )
         plan_date = datetime.strftime(datetime_object, '%Y%m%d')
         service_manager = Registry().get('service_manager')
-        if not append:
+        old_service_items = []
+        if update:
+            old_service_items = service_manager.service_items.copy()
+            service_manager.service_items = []
+        else:
             service_manager.on_new_service_clicked()
         planning_center_service_manager = ServiceManager(plan_date)
         # convert the planning center dict to a list of openlp items
@@ -195,11 +200,43 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
                 custom_slide = CustomSlide(item_title)
                 custom_slide.SetTheme(self.slide_theme_selection_combo_box.currentText())
                 planning_center_service_manager.AddServiceItem(custom_slide)
-
-        service_manager.set_file_name(plan_date)
         service_manager.main_window.display_progress_bar(len(planning_center_service_manager.openlp_data))
         service_manager.process_service_items(planning_center_service_manager.openlp_data)
-        service_manager.main_window.finished_progress_bar()
+        
+        if update:
+            for old_service_item in old_service_items:
+                # see if this service_item contained within the current set of service items
+                
+                # see if we have this same value in the new service
+                for service_index,service_item in enumerate(service_manager.service_items):
+                    # we can compare songs to songs and custom to custom but not between them
+                    if old_service_item['service_item'].name == 'songs' and service_item['service_item'].name == 'songs':
+                        if old_service_item['service_item'].audit == service_item['service_item'].audit:
+                            # get the timestamp from the xml of both the old and new and compare... 
+                            # modifiedDate="2018-06-30T18:44:35Z"
+                            old_match = re.search('modifiedDate="(.+?)Z*"', old_service_item['service_item'].xml_version)
+                            old_datetime = datetime.strptime(old_match.group(1), '%Y-%m-%dT%H:%M:%S')
+                            new_match = re.search('modifiedDate="(.+?)Z*"', service_item['service_item'].xml_version)
+                            new_datetime = datetime.strptime(new_match.group(1), '%Y-%m-%dT%H:%M:%S')
+                            # if old timestamp is more recent than new, then copy old to new
+                            if old_datetime > new_datetime:
+                                service_manager.service_items[service_index] = old_service_item
+                            continue
+                    elif old_service_item['service_item'].name == 'custom' and service_item['service_item'].name == 'custom':
+                        # we don't get actual slide content from the V2 PC API, so all we create by default is a 
+                        # single slide with matching title and content.  If the content
+                        # is different between the old serviceitem (previously imported
+                        # from PC and the new content that we are importing now, then
+                        # the assumption is that we updated this content and we want to 
+                        # keep the old content after this update.  If we actually updated
+                        # something on the PC site in this slide, it would have a
+                        # different title because that is all we can get the v2API
+                        if old_service_item['service_item'].title == service_item['service_item'].title:
+                            if old_service_item['service_item']._raw_frames != service_item['service_item']._raw_frames:
+                                service_manager.service_items[service_index] = old_service_item
+                        
+        service_manager.main_window.finished_progress_bar()       
+        service_manager.set_file_name(plan_date + '.osz')
         service_manager.application.set_normal_cursor()
         service_manager.repaint_service_list(-1, -1)
         self.done(QtWidgets.QDialog.Accepted)
