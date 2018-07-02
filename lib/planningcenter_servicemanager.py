@@ -1,4 +1,4 @@
-import re
+import re, string
 #from openlp.plugins.songs.lib.openlyricsxml import SongXML
 from xml.sax.saxutils import escape
 
@@ -74,10 +74,21 @@ class Song(ServiceItem):
         ServiceItem.__init__(self)
 
         self.update_timestamp = update_timestamp
+        
+        # strip commas from authors because that prevents it from being split up later
+        # for song duplicate detection
+        authors = re.sub(',',';',authors)
+        
+        # lowercase and strip non-word chars from the search_title to match DB expectations
+        search_title = song_title.lower()
+        # turn a trailing punctuation into a space to match DB behavior
+        search_title = re.sub('['+string.punctuation+']$', ' ', search_title)
+        # remove the rest of the punctuation altogether
+        search_title = re.sub('['+string.punctuation+']', '', search_title)
 
         # set the custom elements that are unique for songs
         self.openlp_data['serviceitem']['header']['name'] = 'songs'
-        self.openlp_data['serviceitem']['header']['data']['title'] = "{0}@".format(song_title.lower())
+        self.openlp_data['serviceitem']['header']['data']['title'] = "{0}@".format(search_title)
         self.openlp_data['serviceitem']['header']['data']['authors'] = authors
         self.openlp_data['serviceitem']['header']['audit'] = [song_title, [authors], '', '']
         self.openlp_data['serviceitem']['header']['title'] = song_title
@@ -146,9 +157,9 @@ createdIn=\"PCO\" modifiedIn=\"PCO\" modifiedDate=\"{2}\">\
 
         for verse in self.openlp_data['serviceitem']['data']:
             
-            verse_with_html_breaks = re.sub("\n","<br/>",verse['raw_slide'])
             # escape < > &
-            verse_with_html_breaks = escape(verse_with_html_breaks)
+            verse_with_html_breaks = escape(verse['raw_slide'])
+            verse_with_html_breaks = re.sub("\n","<br/>",verse_with_html_breaks)
             
             # make each verseTag unique, stupid index must be alpha instead of numeric
             index = 'a'

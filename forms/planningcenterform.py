@@ -184,7 +184,7 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
                 if author is None:
                     author = "Unknown"
                 author = author.lstrip()
-                author = author.rstrip() 
+                author = author.rstrip()
         
                 lyrics = arrangement_data['attributes']['lyrics']
                 arrangement_updated_at = arrangement_data['attributes']['updated_at']
@@ -221,7 +221,7 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
                             # if old timestamp is more recent than new, then copy old to new
                             if old_datetime > new_datetime:
                                 service_manager.service_items[service_index] = old_service_item
-                            continue
+                            break
                     elif old_service_item['service_item'].name == 'custom' and service_item['service_item'].name == 'custom':
                         # we don't get actual slide content from the V2 PC API, so all we create by default is a 
                         # single slide with matching title and content.  If the content
@@ -234,6 +234,7 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
                         if old_service_item['service_item'].title == service_item['service_item'].title:
                             if old_service_item['service_item']._raw_frames != service_item['service_item']._raw_frames:
                                 service_manager.service_items[service_index] = old_service_item
+                            break
                         
         service_manager.main_window.finished_progress_bar()       
         service_manager.set_file_name(plan_date + '.osz')
