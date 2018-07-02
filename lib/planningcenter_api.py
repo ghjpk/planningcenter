@@ -2,14 +2,13 @@ import urllib.request
 import re
 from json import loads
 from openlp.plugins.planningcenter.lib.planningcenter_auth import pco_application_id, pco_secret
-import ssl
+import os, ssl
 
 class PlanningCenterAPI:
     def __init__(self):
         self.api_url = "https://api.planningcenteronline.com/services/v2/"
         
     def GetFromServicesAPI(self,url_suffix):
-        import os, ssl
         if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)): 
             ssl._create_default_https_context = ssl._create_unverified_context
         # create a password manager
