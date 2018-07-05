@@ -1,12 +1,13 @@
 import urllib.request
 import re
 from json import loads
-from openlp.plugins.planningcenter.lib.planningcenter_auth import pco_application_id, pco_secret
 import os, ssl
 
 class PlanningCenterAPI:
-    def __init__(self):
+    def __init__(self, application_id, secret):
         self.api_url = "https://api.planningcenteronline.com/services/v2/"
+        self.application_id = application_id
+        self.secret = secret
         
     def GetFromServicesAPI(self,url_suffix):
         if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)): 
@@ -15,7 +16,7 @@ class PlanningCenterAPI:
         password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
         # Add the username and password.
         # If we knew the realm, we could use it instead of None.
-        password_mgr.add_password(None, self.api_url, pco_application_id, pco_secret)
+        password_mgr.add_password(None, self.api_url, self.application_id, self.secret)
         handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
         # create "opener" (OpenerDirector instance)
         opener = urllib.request.build_opener(handler)
@@ -37,7 +38,7 @@ class PlanningCenterAPI:
     def GetPlanList(self,service_type_id):
         if service_type_id:
             self.current_service_type_id = service_type_id
-            plans_url_suffix = "service_types/{0}/plans?order=-sort_date".format(service_type_id)
+            plans_url_suffix = "service_types/{0}/plans?order=-sort_date&per_page=30".format(service_type_id)
             plans = self.GetFromServicesAPI(plans_url_suffix)
             return plans['data']
         

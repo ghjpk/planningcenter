@@ -30,13 +30,87 @@ from datetime import date, datetime
 
 from PyQt5 import QtCore, QtWidgets
 
-from openlp.core.common import Registry, is_win
-from openlp.plugins.planningcenter.forms.planningcenterdialog import Ui_PlanningCenterDialog
+from openlp.core.common import Registry, is_win, Settings
+from openlp.plugins.planningcenter.forms.planningcenterdialog import Ui_PlanningCenterDialog, Ui_PlanningCenterDiaglogAuth
 from openlp.plugins.planningcenter.lib.planningcenter_api import PlanningCenterAPI, SplitLyricsIntoVerses
 from openlp.plugins.planningcenter.lib.planningcenter_servicemanager import ServiceManager, Song, CustomSlide
 
 
 log = logging.getLogger(__name__)
+
+class PlanningCenterAuthForm(QtWidgets.QDialog, Ui_PlanningCenterDiaglogAuth):
+    """
+    The :class:`PlanningCenterAuthForm` class is the PlanningCenter Authentication dialog.
+    """
+
+    def __init__(self, parent=None, plugin=None, db_manager=None):
+        QtWidgets.QDialog.__init__(self, parent, QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
+        self.plugin = plugin
+        self.db_manager = db_manager
+        self.setup_ui(self)
+
+    def initialise(self):
+        """
+        Initialise the PlanningCenterForm
+        """
+        return True
+
+    def exec(self):
+        """
+        Execute the dialog. This method sets everything back to its initial
+        values.
+        """
+        self.test_credentials_button.clicked.connect(self.on_test_credentials_button_clicked)
+        self.ok_button.clicked.connect(self.on_ok_button_clicked)
+        application_id = Settings().value("planningcenter/application_id")
+        secret = Settings().value("planningcenter/secret")
+        if len(application_id):
+            self.application_id_text_edit.setText(application_id)
+        if len(secret):
+            self.secret_text_edit.setText(secret)
+
+        return QtWidgets.QDialog.exec(self)
+    
+    def on_ok_button_clicked(self):
+        """
+        Saves the credentials
+        """
+        are_credentials_good = self.on_test_credentials_button_clicked()
+        if are_credentials_good:
+            # save the credentials
+            Settings().setValue("planningcenter/application_id",self.application_id_text_edit.text())
+            Settings().setValue("planningcenter/secret",self.secret_text_edit.text())
+        self.done(1)
+            
+    def done(self, r):
+        """
+        Log out of PlanningCenter.
+ 
+        :param r: The result of the dialog.
+        """
+        return QtWidgets.QDialog.done(self, r)
+    
+    def on_test_credentials_button_clicked(self):
+        """
+        Tests if the credentials are valid
+        """
+        application_id = self.application_id_text_edit.text()
+        secret = self.secret_text_edit.text()
+        
+        test_auth = PlanningCenterAPI(application_id, secret)
+        try:
+            response = test_auth.GetFromServicesAPI('')
+            
+            organization = response['data']['attributes']['name']
+            QtWidgets.QMessageBox.information(self, 'Planning Center Online Authentication Test', 
+                                              "Authentication successful for organization: {0}".format(organization), 
+                                              QtWidgets.QMessageBox.Ok)
+            return True
+        except:
+            QtWidgets.QMessageBox.warning(self, "Authentication Failed", 
+                                          "Authentiation Failed", 
+                                          QtWidgets.QMessageBox.Ok)
+            return False
 
 class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
     """
@@ -65,12 +139,15 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         self.plan_selection_combo_box.currentIndexChanged.connect(self.on_plan_selection_combobox_changed)
         self.import_as_new_button.clicked.connect(self.on_import_as_new_button_clicked)
         self.update_existing_button.clicked.connect(self.on_update_existing_button_clicked)
+        self.edit_auth_button.clicked.connect(self.on_edit_auth_button_clicked)
         self.stacked_widget.setCurrentIndex(0)
         self.import_as_new_button.setEnabled(False)
         self.update_existing_button.setEnabled(False)
         
         # create an Planning Center API Object
-        self.planning_center_api = PlanningCenterAPI()
+        application_id = Settings().value("planningcenter/application_id")
+        secret = Settings().value("planningcenter/secret")
+        self.planning_center_api = PlanningCenterAPI(application_id,secret)
         
         # set the Service Type Dropdown Box from PCO
         service_types_list = self.planning_center_api.GetServiceTypeList()
@@ -90,7 +167,7 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
 
     def done(self, r):
         """
-        Log out of PlanningCenter.
+        Close dialog.
  
         :param r: The result of the dialog.
         """
@@ -99,8 +176,18 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         self.plan_selection_combo_box.currentIndexChanged.disconnect()
         self.import_as_new_button.clicked.disconnect()
         self.update_existing_button.clicked.disconnect()
+        self.edit_auth_button.clicked.disconnect()
+
         return QtWidgets.QDialog.done(self, r)
 
+    def on_edit_auth_button_clicked(self):
+        # open the edit auth screen
+        auth_form = PlanningCenterAuthForm(self)
+        auth_form.initialise()
+        auth_form.exec()
+        
+        self.done(1)
+        
     def on_service_type_combobox_changed(self):
         """
         Set the plan_selection_combo_box content based upon the current service_type_combo_box setting.
