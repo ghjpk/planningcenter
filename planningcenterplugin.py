@@ -21,8 +21,8 @@
 # Temple Place, Suite 330, Boston, MA 02111-1307 USA                          #
 ###############################################################################
 """
-The :mod:`~openlp.plugins.planningcenter.planningcenterplugin` module contains the Plugin class
-for the PlanningCenter plugin.
+The :mod:`~openlp.plugins.planningcenter.planningcenterplugin` module contains 
+the Plugin class for the PlanningCenter plugin.
 """
 
 import logging
