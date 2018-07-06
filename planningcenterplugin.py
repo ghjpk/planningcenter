@@ -77,18 +77,6 @@ class planningcenterplugin(Plugin):
         log.info('PlanningCenter Initialising')
         super(planningcenterplugin, self).initialise()
         
-        
-        
-        # Determine which dialog to show based on whether the auth values are set yet
-        self.application_id = Settings().value("planningcenter/application_id")
-        self.secret = Settings().value("planningcenter/secret")
-        
-        if len(self.application_id) == 0 or len(self.secret) == 0:
-            self.planningcenterselect_form = PlanningCenterAuthForm(Registry().get('main_window'), self)
-        else:
-            self.planningcenterselect_form = PlanningCenterForm(Registry().get('main_window'), self)
-        self.planningcenterselect_form.initialise()
-
     def add_import_menu_item(self, import_menu):
         """
         Add "PlanningCenter Service" to the **Import** menu.
@@ -106,6 +94,15 @@ class planningcenterplugin(Plugin):
         """
         Run the PlanningCenter importer.
         """
+        # Determine which dialog to show based on whether the auth values are set yet
+        self.application_id = Settings().value("planningcenter/application_id")
+        self.secret = Settings().value("planningcenter/secret")
+        
+        if len(self.application_id) == 0 or len(self.secret) == 0:
+            self.planningcenterselect_form = PlanningCenterAuthForm(Registry().get('main_window'), self)
+        else:
+            self.planningcenterselect_form = PlanningCenterForm(Registry().get('main_window'), self)
+        self.planningcenterselect_form.initialise()
         self.planningcenterselect_form.exec()
 
     @staticmethod

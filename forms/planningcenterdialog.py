@@ -34,73 +34,43 @@ class Ui_PlanningCenterDiaglogAuth(object):
     def setup_ui(self, planningcenter_dialog_auth):
         planningcenter_dialog_auth.setObjectName('planningcenter_dialog_auth')
         planningcenter_dialog_auth.resize(700, 350)
-        self.planningcenter_layout = QtWidgets.QVBoxLayout(planningcenter_dialog_auth)
-        self.planningcenter_layout.setSpacing(0)
-        self.planningcenter_layout.setContentsMargins(0, 0, 0, 0)
-        self.planningcenter_layout.setObjectName('planningcenter_layout')
-        self.stacked_widget = QtWidgets.QStackedWidget(planningcenter_dialog_auth)
-        self.stacked_widget.setObjectName('stacked_widget')
-        self.planningcenter_layout.addWidget(self.stacked_widget)
+
+        self.auth_layout = QtWidgets.QFormLayout(planningcenter_dialog_auth)
+        self.auth_layout.setContentsMargins(20, 40, 20, 40)
+        self.auth_layout.setSpacing(8)
+        self.auth_layout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
         
-        self.auth_page = QtWidgets.QWidget()
-        self.auth_page.setObjectName('auth_page')
-        self.stacked_widget.addWidget(self.auth_page)
-        
-        self.plan_selection_layout = QtWidgets.QFormLayout(self.auth_page)
-        self.plan_selection_layout.setContentsMargins(20, 40, 20, 40)
-        self.plan_selection_layout.setSpacing(8)
-        self.plan_selection_layout.setObjectName('plan_selection_layout')
-        
-        self.notice_layout = QtWidgets.QVBoxLayout()
-        self.notice_layout.setObjectName('notice_layout')
-        self.notice_label = QtWidgets.QLabel(self.auth_page)
+        self.notice_label = QtWidgets.QLabel(planningcenter_dialog_auth)
         self.notice_label.setWordWrap(True)
-        self.notice_label.setObjectName('notice_label')
-        self.notice_layout.addWidget(self.notice_label)
+        self.auth_layout.addRow(self.notice_label)
         
-        self.instructions_label = QtWidgets.QLabel(self.auth_page)
+        self.instructions_label = QtWidgets.QLabel(planningcenter_dialog_auth)
         self.instructions_label.setWordWrap(True)
-        self.instructions_label.setObjectName('instructions_label')
-        self.notice_layout.addWidget(self.instructions_label)
-        self.plan_selection_layout.setLayout(0, QtWidgets.QFormLayout.SpanningRole, self.notice_layout)
+        self.auth_layout.addRow(self.instructions_label)
         
         # Application ID GUI Elements
-        self.application_id_label = QtWidgets.QLabel(self.auth_page)
-        #self.application_id_label.setObjectName('application_id_label')
-        self.plan_selection_layout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.application_id_label)
-        self.application_id_text_edit = QtWidgets.QLineEdit(self.auth_page)
-        #self.application_id_text_edit.setObjectName('application_id_text_edit')
-        self.plan_selection_layout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.application_id_text_edit)
-        self.application_id_label.setBuddy(self.application_id_text_edit)
+        self.application_id_label = QtWidgets.QLabel(planningcenter_dialog_auth)
+        self.application_id_text_edit = QtWidgets.QLineEdit(planningcenter_dialog_auth)
+        self.application_id_text_edit.setMaxLength(64)
+        self.auth_layout.addRow(self.application_id_label, self.application_id_text_edit)
         self.application_id_text_edit.setFocus()
         
         # Secret GUI Elements (shhhh... it's a secret...)
-        self.secret_label = QtWidgets.QLabel(self.auth_page)
-        self.secret_label.setObjectName('secret_label')
-        self.plan_selection_layout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.secret_label)
-        self.secret_text_edit = QtWidgets.QLineEdit(self.auth_page)
-        self.secret_text_edit.setObjectName('secret_text_edit')
-        self.plan_selection_layout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.secret_text_edit)
-        self.secret_label.setBuddy(self.secret_text_edit)
+        self.secret_label = QtWidgets.QLabel(planningcenter_dialog_auth)
+        self.secret_text_edit = QtWidgets.QLineEdit(planningcenter_dialog_auth)
+        self.secret_text_edit.setMaxLength(64)
+        self.auth_layout.addRow(self.secret_label, self.secret_text_edit)
         
         # Buttons
-        self.button_layout = QtWidgets.QHBoxLayout()
-        self.button_layout.setSpacing(8)
-        self.button_layout.setContentsMargins(0, -1, -1, -1)
-        self.button_layout.setObjectName('button_layout')
-        self.test_credentials_button = QtWidgets.QPushButton(self.auth_page)
-        self.test_credentials_button.setObjectName('test_credentials_button')
-        self.button_layout.addWidget(self.test_credentials_button)
-        self.ok_button = QtWidgets.QPushButton(self.auth_page)
-        self.ok_button.setObjectName('ok_button')
-        self.button_layout.addWidget(self.ok_button)
-        self.plan_selection_layout.setLayout(3, QtWidgets.QFormLayout.FieldRole, self.button_layout)
+        self.button_layout = QtWidgets.QDialogButtonBox(planningcenter_dialog_auth)
+        self.save_credentials_button = QtWidgets.QPushButton(planningcenter_dialog_auth)
+        self.button_layout.addButton(self.save_credentials_button, QtWidgets.QDialogButtonBox.AcceptRole)
+        self.test_credentials_button = QtWidgets.QPushButton(planningcenter_dialog_auth)
+        self.button_layout.addButton(self.test_credentials_button, QtWidgets.QDialogButtonBox.AcceptRole)
+        self.auth_layout.addRow(self.button_layout)
         
         self.retranslate_ui(planningcenter_dialog_auth)
-        self.stacked_widget.setCurrentIndex(0)
         
-        
-
     def retranslate_ui(self, planningcenter_dialog):
         """
         Translate the GUI.
@@ -123,7 +93,7 @@ below.  Personal Access Tokens are created by doing the following:
         self.application_id_label.setText(translate('PlanningCenterPlugin.PlanningCenterAuthForm', "Application ID"))
         self.secret_label.setText(translate('PlanningCenterPlugin.PlanningCenterAuthForm', "Secret"))
         self.test_credentials_button.setText(translate('PlanningCenterPlugin.PlanningCenterAuthForm','Test Credentials'))
-        self.ok_button.setText(translate('PlanningCenterPlugin.PlanningCenterAuthForm','OK'))
+        self.save_credentials_button.setText(translate('PlanningCenterPlugin.PlanningCenterAuthForm','Save Credentials'))
         
 
 class Ui_PlanningCenterDialog(object):
@@ -214,7 +184,7 @@ class Ui_PlanningCenterDialog(object):
         self.plan_selection_layout.setLayout(6, QtWidgets.QFormLayout.FieldRole, self.edit_auth_button_layout)  
          
         self.retranslate_ui(planningcenter_dialog)
-        self.stacked_widget.setCurrentIndex(0)
+        #self.stacked_widget.setCurrentIndex(0)
 
     def retranslate_ui(self, planningcenter_dialog):
         """

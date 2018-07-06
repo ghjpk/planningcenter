@@ -61,7 +61,7 @@ class PlanningCenterAuthForm(QtWidgets.QDialog, Ui_PlanningCenterDiaglogAuth):
         values.
         """
         self.test_credentials_button.clicked.connect(self.on_test_credentials_button_clicked)
-        self.ok_button.clicked.connect(self.on_ok_button_clicked)
+        self.save_credentials_button.clicked.connect(self.on_save_credentials_button_clicked)
         application_id = Settings().value("planningcenter/application_id")
         secret = Settings().value("planningcenter/secret")
         if len(application_id):
@@ -71,7 +71,7 @@ class PlanningCenterAuthForm(QtWidgets.QDialog, Ui_PlanningCenterDiaglogAuth):
 
         return QtWidgets.QDialog.exec(self)
     
-    def on_ok_button_clicked(self):
+    def on_save_credentials_button_clicked(self):
         """
         Saves the credentials
         """
@@ -84,10 +84,12 @@ class PlanningCenterAuthForm(QtWidgets.QDialog, Ui_PlanningCenterDiaglogAuth):
             
     def done(self, r):
         """
-        Log out of PlanningCenter.
+        Close auth dialog.
  
         :param r: The result of the dialog.
         """
+        self.test_credentials_button.clicked.disconnect()
+        self.save_credentials_button.clicked.disconnect()
         return QtWidgets.QDialog.done(self, r)
     
     def on_test_credentials_button_clicked(self):
