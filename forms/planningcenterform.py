@@ -62,14 +62,21 @@ class PlanningCenterAuthForm(QtWidgets.QDialog, Ui_PlanningCenterDiaglogAuth):
         """
         self.test_credentials_button.clicked.connect(self.on_test_credentials_button_clicked)
         self.save_credentials_button.clicked.connect(self.on_save_credentials_button_clicked)
+        self.delete_credentials_button.clicked.connect(self.on_delete_credentials_button_clicked)
+        self.delete_credentials_button.setEnabled(False)
         application_id = Settings().value("planningcenter/application_id")
         secret = Settings().value("planningcenter/secret")
         if len(application_id):
             self.application_id_text_edit.setText(application_id)
-        if len(secret):
             self.secret_text_edit.setText(secret)
-
+            self.delete_credentials_button.setEnabled(True)
+            
         return QtWidgets.QDialog.exec(self)
+    
+    def on_delete_credentials_button_clicked(self):
+        Settings().setValue("planningcenter/application_id",'')
+        Settings().setValue("planningcenter/secret",'')
+        self.done(1)
     
     def on_save_credentials_button_clicked(self):
         """
@@ -142,7 +149,6 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         self.import_as_new_button.clicked.connect(self.on_import_as_new_button_clicked)
         self.update_existing_button.clicked.connect(self.on_update_existing_button_clicked)
         self.edit_auth_button.clicked.connect(self.on_edit_auth_button_clicked)
-        self.stacked_widget.setCurrentIndex(0)
         self.import_as_new_button.setEnabled(False)
         self.update_existing_button.setEnabled(False)
         

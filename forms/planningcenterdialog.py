@@ -67,15 +67,18 @@ class Ui_PlanningCenterDiaglogAuth(object):
         self.button_layout.addButton(self.save_credentials_button, QtWidgets.QDialogButtonBox.AcceptRole)
         self.test_credentials_button = QtWidgets.QPushButton(planningcenter_dialog_auth)
         self.button_layout.addButton(self.test_credentials_button, QtWidgets.QDialogButtonBox.AcceptRole)
+        self.delete_credentials_button = QtWidgets.QPushButton(planningcenter_dialog_auth)
+        self.button_layout.addButton(self.delete_credentials_button, QtWidgets.QDialogButtonBox.ActionRole)
         self.auth_layout.addRow(self.button_layout)
+        
         
         self.retranslate_ui(planningcenter_dialog_auth)
         
-    def retranslate_ui(self, planningcenter_dialog):
+    def retranslate_ui(self, planningcenter_dialog_auth):
         """
         Translate the GUI.
         """
-        planningcenter_dialog.setWindowTitle(translate('PlanningCenterPlugin.PlanningCenterAuthForm', 'Planning Center Service Importer Authentication'))
+        planningcenter_dialog_auth.setWindowTitle(translate('PlanningCenterPlugin.PlanningCenterAuthForm', 'Planning Center Online Authentication'))
         self.notice_label.setText(
             translate('PlanningCenterPlugin.PlanningCenterForm', '<strong>Note:</strong> '
                       'An Internet connection and a Planning Center Online Account are required in order to import plans from Planning Center Online.')    
@@ -94,113 +97,63 @@ below.  Personal Access Tokens are created by doing the following:
         self.secret_label.setText(translate('PlanningCenterPlugin.PlanningCenterAuthForm', "Secret"))
         self.test_credentials_button.setText(translate('PlanningCenterPlugin.PlanningCenterAuthForm','Test Credentials'))
         self.save_credentials_button.setText(translate('PlanningCenterPlugin.PlanningCenterAuthForm','Save Credentials'))
+        self.delete_credentials_button.setText(translate('PlanningCenterPlugin.PlanningCenterAuthForm','Delete Credentials'))
         
-
 class Ui_PlanningCenterDialog(object):
     """
     The actual Qt components that make up the dialog.
     """
     def setup_ui(self, planningcenter_dialog):
         planningcenter_dialog.setObjectName('planningcenter_dialog')
-        planningcenter_dialog.resize(616, 378)
-        self.planningcenter_layout = QtWidgets.QVBoxLayout(planningcenter_dialog)
-        self.planningcenter_layout.setSpacing(0)
-        self.planningcenter_layout.setContentsMargins(0, 0, 0, 0)
-        self.planningcenter_layout.setObjectName('planningcenter_layout')
-        self.stacked_widget = QtWidgets.QStackedWidget(planningcenter_dialog)
-        self.stacked_widget.setObjectName('stacked_widget')
-        self.planningcenter_layout.addWidget(self.stacked_widget)
-        
-        self.plan_selection_page = QtWidgets.QWidget()
-        self.plan_selection_page.setObjectName('plan_selection_page')
-        self.stacked_widget.addWidget(self.plan_selection_page)
-        
-        self.plan_selection_layout = QtWidgets.QFormLayout(self.plan_selection_page)
-        self.plan_selection_layout.setContentsMargins(80, 60, 80, 60)
-        self.plan_selection_layout.setSpacing(8)
-        self.plan_selection_layout.setObjectName('plan_selection_layout')
-        
-        self.notice_layout = QtWidgets.QHBoxLayout()
-        self.notice_layout.setObjectName('notice_layout')
-        self.notice_label = QtWidgets.QLabel(self.plan_selection_page)
-        self.notice_label.setWordWrap(True)
-        self.notice_label.setObjectName('notice_label')
-        self.notice_layout.addWidget(self.notice_label)
-        self.plan_selection_layout.setLayout(0, QtWidgets.QFormLayout.SpanningRole, self.notice_layout)
+        planningcenter_dialog.resize(400, 280)
+        self.planningcenter_layout = QtWidgets.QFormLayout(planningcenter_dialog)
+        self.planningcenter_layout.setContentsMargins(50, 50, 50, 50)
+        self.planningcenter_layout.setSpacing(8)
+        self.planningcenter_layout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
         
         # Service Type GUI Elements -- service_type combo_box
-        self.service_type_label = QtWidgets.QLabel(self.plan_selection_page)
-        self.service_type_label.setObjectName('service_type_label')
-        self.plan_selection_layout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.service_type_label)
-        self.service_type_combo_box = QtWidgets.QComboBox(self.plan_selection_page)
-        self.service_type_combo_box.setObjectName('service_type_combo_box')
-        self.plan_selection_layout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.service_type_combo_box)
-        self.service_type_label.setBuddy(self.service_type_combo_box)
+        self.service_type_label = QtWidgets.QLabel(planningcenter_dialog)
+        self.service_type_combo_box = QtWidgets.QComboBox(planningcenter_dialog)
+        self.planningcenter_layout.addRow(self.service_type_label,self.service_type_combo_box)
 
         # Plan Selection GUI Elements
-        self.plan_selection_label = QtWidgets.QLabel(self.plan_selection_page)
-        self.plan_selection_label.setObjectName('plan_selection_label')
-        self.plan_selection_layout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.plan_selection_label)
-        self.plan_selection_combo_box = QtWidgets.QComboBox(self.plan_selection_page)
-        self.plan_selection_combo_box.setObjectName('plan_selection_combo_box')
-        self.plan_selection_layout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.plan_selection_combo_box)
-        self.plan_selection_label.setBuddy(self.plan_selection_combo_box)   
+        self.plan_selection_label = QtWidgets.QLabel(planningcenter_dialog)
+        self.plan_selection_combo_box = QtWidgets.QComboBox(planningcenter_dialog)
+        self.planningcenter_layout.addRow(self.plan_selection_label,self.plan_selection_combo_box)
         
         # Theme List for Songs and Custom Slides
-        self.song_theme_selection_label = QtWidgets.QLabel(self.plan_selection_page)
-        self.song_theme_selection_label.setObjectName('song_theme_selection_label')
-        self.plan_selection_layout.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.song_theme_selection_label)
-        self.song_theme_selection_combo_box = QtWidgets.QComboBox(self.plan_selection_page)
-        self.song_theme_selection_combo_box.setObjectName('song_theme_selection_combo_box')
-        self.plan_selection_layout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.song_theme_selection_combo_box)
-        self.song_theme_selection_label.setBuddy(self.song_theme_selection_combo_box)
-        self.slide_theme_selection_label = QtWidgets.QLabel(self.plan_selection_page)
-        self.slide_theme_selection_label.setObjectName('slide_theme_selection_label')
-        self.plan_selection_layout.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.slide_theme_selection_label)
-        self.slide_theme_selection_combo_box = QtWidgets.QComboBox(self.plan_selection_page)
-        self.slide_theme_selection_combo_box.setObjectName('slide_theme_selection_combo_box')
-        self.plan_selection_layout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.slide_theme_selection_combo_box)
+        self.song_theme_selection_label = QtWidgets.QLabel(planningcenter_dialog)
+        self.song_theme_selection_combo_box = QtWidgets.QComboBox(planningcenter_dialog)
+        self.planningcenter_layout.addRow(self.song_theme_selection_label, self.song_theme_selection_combo_box)
+        self.slide_theme_selection_label = QtWidgets.QLabel(planningcenter_dialog)
+        self.slide_theme_selection_combo_box = QtWidgets.QComboBox(planningcenter_dialog)
+        self.planningcenter_layout.addRow(self.slide_theme_selection_label, self.slide_theme_selection_combo_box)
         
         # Import Button
-        self.import_button_layout = QtWidgets.QHBoxLayout()
-        self.import_button_layout.setSpacing(8)
-        self.import_button_layout.setContentsMargins(0, -1, -1, -1)
-        self.import_button_layout.setObjectName('import_button_layout')
-        self.import_as_new_button = QtWidgets.QPushButton(self.plan_selection_page)
-        self.import_as_new_button.setObjectName('import_as_new_button')
-        self.import_button_layout.addWidget(self.import_as_new_button)
-        self.update_existing_button = QtWidgets.QPushButton(self.plan_selection_page)
-        self.update_existing_button.setObjectName('update_existing_button')
-        self.import_button_layout.addWidget(self.update_existing_button)
-        self.plan_selection_layout.setLayout(5, QtWidgets.QFormLayout.FieldRole, self.import_button_layout)  
-        
-        self.edit_auth_button_layout = QtWidgets.QHBoxLayout()
-        self.edit_auth_button_layout.setSpacing(8)
-        self.edit_auth_button_layout.setContentsMargins(70, 30, 70, 0)
-        #self.edit_auth_button_layout.setObjectName('edit_auth_button_layout')
-        self.edit_auth_button = QtWidgets.QPushButton(self.plan_selection_page)
-        self.edit_auth_button.setObjectName('edit_auth_button')
-        self.edit_auth_button_layout.addWidget(self.edit_auth_button)
-        self.plan_selection_layout.setLayout(6, QtWidgets.QFormLayout.FieldRole, self.edit_auth_button_layout)  
+        self.button_layout = QtWidgets.QDialogButtonBox(planningcenter_dialog)
+        self.import_as_new_button = QtWidgets.QPushButton(planningcenter_dialog)
+        self.button_layout.addButton(self.import_as_new_button, QtWidgets.QDialogButtonBox.AcceptRole)
+        self.update_existing_button = QtWidgets.QPushButton(planningcenter_dialog)
+        self.button_layout.addButton(self.update_existing_button, QtWidgets.QDialogButtonBox.AcceptRole)
+        self.edit_auth_button = QtWidgets.QPushButton(planningcenter_dialog)
+        self.button_layout.addButton(self.edit_auth_button, QtWidgets.QDialogButtonBox.ActionRole)
+        self.planningcenter_layout.addRow(self.button_layout)
          
         self.retranslate_ui(planningcenter_dialog)
-        #self.stacked_widget.setCurrentIndex(0)
+
 
     def retranslate_ui(self, planningcenter_dialog):
         """
         Translate the GUI.
         """
-        planningcenter_dialog.setWindowTitle(translate('PlanningCenterPlugin.PlanningCenterForm', 'Planning Center Service Importer'))
-        self.notice_label.setText(
-            translate('PlanningCenterPlugin.PlanningCenterForm', '<strong>Note:</strong> '
-                      'An Internet connection is required in order to import plans from Planning Center Online.')
-        )
-        self.service_type_label.setText(translate('PlanningCenterPlugin.PlanningCenterForm', 'Service Type:'))
-        self.plan_selection_label.setText(translate('PlanningCenterPlugin.PlanningCenterForm', 'Select Plan:'))
+        planningcenter_dialog.setWindowTitle(translate('PlanningCenterPlugin.PlanningCenterForm', 'Planning Center Online Service Importer'))
+        self.service_type_label.setText(translate('PlanningCenterPlugin.PlanningCenterForm', 'Service Type'))
+        self.plan_selection_label.setText(translate('PlanningCenterPlugin.PlanningCenterForm', 'Select Plan'))
         self.import_as_new_button.setText(translate('PlanningCenterPlugin.PlanningCenterForm', 'Import New'))
         self.import_as_new_button.setToolTip(translate('PlanningCenterPlugin.PlanningCenterForm', 'Import As New Service'))
         self.update_existing_button.setText(translate('PlanningCenterPlugin.PlanningCenterForm', 'Refresh Service'))
-        self.update_existing_button.setToolTip(translate('PlanningCenterPlugin.PlanningCenterForm', 'Refresh Existing Service'))
+        self.update_existing_button.setToolTip(translate('PlanningCenterPlugin.PlanningCenterForm', 
+                                                         'Refresh Existing Service from Planning Center.  This will update song lyrics or item orders that have changed'))
         self.edit_auth_button.setText(translate('PlanningCenterPlugin.PlanningCenterForm', 'Edit Authentication'))
         self.edit_auth_button.setToolTip(translate('PlanningCenterPlugin.PlanningCenterForm', 'Edit the Application ID and Secret Code to login to Planning Center Online'))
         self.song_theme_selection_label.setText(translate('PlanningCenterPlugin.PlanningCenterForm', 'Song Theme'))
