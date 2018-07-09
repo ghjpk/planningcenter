@@ -15,7 +15,7 @@ class PlanningCenterAPI:
             resource a second time, it will respond with the cached response.  This is useful
             for doing development work on an airplane, like, say, from SFO to TPE on July 8th.
             The production default should be False """
-        airplane_mode = True
+        airplane_mode = False
         module_directory = os.path.dirname(__file__)
         airplane_mode_suffix = re.sub('\W','_',url_suffix)
         airplane_mode_filename = "{0}/airplane_mode/{1}.json".format(
