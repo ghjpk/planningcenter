@@ -105,17 +105,14 @@ class PlanningCenterAuthForm(QtWidgets.QDialog, Ui_PlanningCenterDiaglogAuth):
         """
         application_id = self.application_id_text_edit.text()
         secret = self.secret_text_edit.text()
-        
         test_auth = PlanningCenterAPI(application_id, secret)
-        try:
-            response = test_auth.GetFromServicesAPI('')
-            
-            organization = response['data']['attributes']['name']
+        organization = test_auth.CheckCredentials()
+        if len(organization):
             QtWidgets.QMessageBox.information(self, 'Planning Center Online Authentication Test', 
                                               "Authentication successful for organization: {0}".format(organization), 
                                               QtWidgets.QMessageBox.Ok)
             return True
-        except:
+        else:
             QtWidgets.QMessageBox.warning(self, "Authentication Failed", 
                                           "Authentiation Failed", 
                                           QtWidgets.QMessageBox.Ok)
