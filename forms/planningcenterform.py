@@ -33,7 +33,7 @@ from PyQt5 import QtCore, QtWidgets
 from openlp.core.common import Registry, is_win, Settings
 from openlp.plugins.planningcenter.forms.planningcenterdialog import Ui_PlanningCenterDialog, Ui_PlanningCenterDiaglogAuth
 from openlp.plugins.planningcenter.lib.planningcenter_api import PlanningCenterAPI, SplitLyricsIntoVerses
-from openlp.plugins.planningcenter.lib.planningcenter_servicemanager import ServiceManager, Song, CustomSlide
+import openlp.plugins.planningcenter.lib.planningcenter_servicemanager as pco
 
 
 log = logging.getLogger(__name__)
@@ -250,7 +250,7 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
             service_manager.service_items = []
         else:
             service_manager.on_new_service_clicked()
-        planning_center_service_manager = ServiceManager(plan_date)
+        planning_center_service_manager = pco.ServiceManager(plan_date)
         # convert the planning center dict to a list of openlp items
         for item in planning_center_items_dict['data']:
             item_title = item['attributes']['title']
@@ -285,11 +285,11 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
                 verses = []
                 verses = SplitLyricsIntoVerses(lyrics)
                 
-                song = Song(item_title,author,verses,arrangement_updated_at)
+                song = pco.Song(item_title,author,verses,arrangement_updated_at)
                 song.SetTheme(self.song_theme_selection_combo_box.currentText())
                 planning_center_service_manager.AddServiceItem(song)
             else:
-                custom_slide = CustomSlide(item_title)
+                custom_slide = pco.CustomSlide(item_title)
                 custom_slide.SetTheme(self.slide_theme_selection_combo_box.currentText())
                 planning_center_service_manager.AddServiceItem(custom_slide)
         service_manager.main_window.display_progress_bar(len(planning_center_service_manager.openlp_data))
