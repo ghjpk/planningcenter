@@ -51,7 +51,6 @@ from openlp.core.lib import Plugin, StringContent
 from openlp.core.lib.ui import create_action
 from openlp.plugins.planningcenter.forms.planningcenterform import PlanningCenterForm, PlanningCenterAuthForm
 
-
 __default_settings__ = {
     'planningcenter/application_id': '',
     'planningcenter/secret': ''
@@ -67,7 +66,7 @@ class planningcenterplugin(Plugin):
         """
         Create and set up the PlanningCenter plugin.
         """
-        super(planningcenterplugin, self).__init__('planningcenter', __default_settings__, version='0.1')
+        super(planningcenterplugin, self).__init__('planningcenter', __default_settings__, version='0.2')
         self.planningcenterselect_form = None
 
     def initialise(self):
@@ -147,4 +146,17 @@ class planningcenterplugin(Plugin):
         """
         log.info('PlanningCenter Finalising')
         self.new_service_created()
+        # call songs plugin manager to delete temporary songs
+        from openlp.plugins.songs.lib.db import Song
+        songs_manager = Registry().get('songs').plugin.manager
+        songs = songs_manager.get_all_objects(Song, Song.temporary == True)        
+        for song in songs:
+            songs_manager.delete_object(Song, song.id)
+        # call custom manager to delete pco slides
+        from openlp.plugins.custom.lib.db import CustomSlide
+        custom_manager = Registry().get('custom').plugin.db_manager
+        pco_slides = custom_manager.get_all_objects(CustomSlide, CustomSlide.credits == 'pco')
+        for slide in pco_slides:
+            custom_manager.delete_object(CustomSlide,slide.id)
         super(planningcenterplugin, self).finalise()
+

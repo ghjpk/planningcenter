@@ -32,9 +32,11 @@ from PyQt5 import QtCore, QtWidgets
 
 from openlp.core.common import Registry, is_win, Settings
 from openlp.plugins.planningcenter.forms.planningcenterdialog import Ui_PlanningCenterDialog, Ui_PlanningCenterDiaglogAuth
-from openlp.plugins.planningcenter.lib.planningcenter_api import PlanningCenterAPI, SplitLyricsIntoVerses
-import openlp.plugins.planningcenter.lib.planningcenter_servicemanager as pco
-
+from openlp.plugins.planningcenter.lib.planningcenter_api import PlanningCenterAPI, SplitLyricsIntoVerses, ManagerThatSavesSongAsTemporary
+from openlp.plugins.songs.lib.importers.songimport import SongImport
+from openlp.plugins.songs.lib.db import Song
+from openlp.plugins.custom.lib.db import CustomSlide
+from openlp.plugins.custom.lib import CustomXMLBuilder
 
 log = logging.getLogger(__name__)
 
@@ -236,65 +238,108 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         """
         Create a new service and import all of the PCO items into it
         """
+        service_manager = Registry().get('service_manager')
+        service_manager.application.set_busy_cursor()
         # get the plan ID for the current plan selection
         plan_id = self.plan_selection_combo_box.itemData(self.plan_selection_combo_box.currentIndex())
         # get the items array from Planning Center
         planning_center_items_dict = self.planning_center_api.GetItemsDict(plan_id)
-        # create a YYYYMMDD plan_date 
-        datetime_object = datetime.strptime(self.plan_selection_combo_box.currentText(), '%B %d, %Y' )
-        plan_date = datetime.strftime(datetime_object, '%Y%m%d')
-        service_manager = Registry().get('service_manager')
+
         old_service_items = []
         if update:
             old_service_items = service_manager.service_items.copy()
             service_manager.service_items = []
         else:
             service_manager.on_new_service_clicked()
-        planning_center_service_manager = pco.ServiceManager(plan_date)
-        # convert the planning center dict to a list of openlp items
+        
+        service_manager.main_window.display_progress_bar(len(planning_center_items_dict['data']))
+        # convert the planning center dict to Songs and Add them to the ServiceManager
+        pco_id_to_openlp_id = {}
+        temp_manager = ManagerThatSavesSongAsTemporary()
         for item in planning_center_items_dict['data']:
             item_title = item['attributes']['title']
-        
             if item['attributes']['item_type'] == 'song':
                 arrangement_id = item['relationships']['arrangement']['data']['id']
                 song_id = item['relationships']['song']['data']['id']
-        
-                # get arrangement from "included" resources
-                arrangement_data = {}
-                song_data = {}
-                for included_item in planning_center_items_dict['included']:
-                    if included_item['type'] == 'Song' and included_item['id'] == song_id:
-                        song_data = included_item
-                    elif included_item['type'] == 'Arrangement' and included_item['id'] == arrangement_id:
-                        arrangement_data = included_item
-                        
-                    # if we have both song and arrangement set, stop iterating
-                    if len(song_data) and len(arrangement_data):
-                        break
-                    
-                author = song_data['attributes']['author']
-                if author is None:
-                    author = "Unknown"
-                author = author.lstrip()
-                author = author.rstrip()
-        
-                lyrics = arrangement_data['attributes']['lyrics']
-                arrangement_updated_at = arrangement_data['attributes']['updated_at']
-        
-                # split the lyrics into verses
-                verses = []
-                verses = SplitLyricsIntoVerses(lyrics)
-                
-                song = pco.Song(item_title,author,verses,arrangement_updated_at)
-                song.SetTheme(self.song_theme_selection_combo_box.currentText())
-                planning_center_service_manager.AddServiceItem(song)
+                if song_id not in pco_id_to_openlp_id:
+                    # get arrangement from "included" resources
+                    arrangement_data = {}
+                    song_data = {}
+                    for included_item in planning_center_items_dict['included']:
+                        if included_item['type'] == 'Song' and included_item['id'] == song_id:
+                            song_data = included_item
+                        elif included_item['type'] == 'Arrangement' and included_item['id'] == arrangement_id:
+                            arrangement_data = included_item
+                        # if we have both song and arrangement set, stop iterating
+                        if len(song_data) and len(arrangement_data):
+                            break
+                    author = song_data['attributes']['author']
+                    lyrics = arrangement_data['attributes']['lyrics']
+                    arrangement_updated_at = datetime.strptime(arrangement_data['attributes']['updated_at'], '%Y-%m-%dT%H:%M:%SZ')
+                    # start importing the song
+                    pco_import = SongImport(temp_manager,filename=None)
+                    pco_import.set_defaults()
+                    pco_import.title = item_title
+                    pco_import.theme_name = self.song_theme_selection_combo_box.currentText()
+                    if author:
+                        pco_import.parse_author(song_data['attributes']['author'])
+                    verses = []
+                    verses = SplitLyricsIntoVerses(lyrics)
+                    for verse in verses:
+                        if len(verse['verse_type']):
+                            verse_def = verse['verse_type'] + verse['verse_number']
+                            pco_import.add_verse(verse_text=verse['verse_text'], verse_def=verse_def)
+                        else:
+                            pco_import.add_verse(verse_text=verse['verse_text'])
+                    pco_import.finish()
+                    openlp_id = temp_manager.song_id
+                    pco_id_to_openlp_id[song_id] = openlp_id
+
+                openlp_id = pco_id_to_openlp_id[song_id]
+                # set the last_updated date/time based on the PCO date/time so I can look for updates
+                song = temp_manager.get_object(Song, openlp_id)
+                song.last_modified = arrangement_updated_at
+                temp_manager.save_object(song)
+                # get the current values of these values so I can set them back to this value
+                songs = Registry().get('songs')
+                previous_remote_triggered = songs.remote_triggered
+                previous_remote_song = songs.remote_song
+                # turn on remote song feature to add to service
+                songs.remote_triggered = True
+                songs.remote_song = openlp_id
+                songs.add_to_service(remote=openlp_id)
+                # reset values to their previous values
+                songs.remote_triggered = previous_remote_triggered
+                songs.remote_song = previous_remote_song
             else:
-                custom_slide = pco.CustomSlide(item_title)
-                custom_slide.SetTheme(self.slide_theme_selection_combo_box.currentText())
-                planning_center_service_manager.AddServiceItem(custom_slide)
-        service_manager.main_window.display_progress_bar(len(planning_center_service_manager.openlp_data))
-        service_manager.process_service_items(planning_center_service_manager.openlp_data)
-        
+                """ 
+                PCO has deprecated their custom slide interface and they are 
+                planning to eliminate it in mid-2019, so this interface will not 
+                support their custom slides except to create a custom slide 
+                placeholder
+                """
+                custom_slide = CustomSlide()
+                custom_slide.title = item_title
+                sxml = CustomXMLBuilder()
+                sxml.add_verse_to_lyrics('custom', str(1), item_title)
+                custom_slide.text = str(sxml.extract_xml(), 'utf-8')
+                custom_slide.credits = 'pco'
+                custom_slide.theme_name = self.slide_theme_selection_combo_box.currentText()
+                custom = Registry().get('custom')
+                custom_db_manager = custom.plugin.db_manager
+                custom_db_manager.save_object(custom_slide)
+                previous_remote_triggered = custom.remote_triggered
+                previous_remote_custom = custom.remote_custom
+                # turn on remote feature to add to service
+                custom.remote_triggered = True
+                custom.remote_custom = custom_slide.id
+                custom.add_to_service(remote=custom_slide.id)
+                # reset values to their previous values
+                custom.remote_triggered = previous_remote_triggered
+                custom.remote_custom = previous_remote_custom
+            
+            service_manager.main_window.increment_progress_bar()
+                    
         if update:
             for old_service_item in old_service_items:
                 # see if this service_item contained within the current set of service items
@@ -328,17 +373,13 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
                                 service_manager.service_items[service_index] = old_service_item
                             break
                         
-        service_manager.main_window.finished_progress_bar()       
-        service_manager.set_file_name(plan_date + '.osz')
-        service_manager.application.set_normal_cursor()
+        service_manager.main_window.finished_progress_bar()     
+        # select the first item
+        item = service_manager.service_manager_list.topLevelItem(0)
+        service_manager.service_manager_list.setCurrentItem(item)
         service_manager.repaint_service_list(-1, -1)
         self.done(QtWidgets.QDialog.Accepted)
-        
-    def on_update_button_clicked(self):
-        """
-        Update existing service items with those from PCO that have newer updated timestamps
-        """
-        pass
+        service_manager.application.set_normal_cursor()
 
     @property
     def application(self):
