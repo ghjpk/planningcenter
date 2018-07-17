@@ -32,11 +32,9 @@ from PyQt5 import QtCore, QtWidgets
 
 from openlp.core.common import Registry, is_win, Settings
 from openlp.plugins.planningcenter.forms.planningcenterdialog import Ui_PlanningCenterDialog, Ui_PlanningCenterDiaglogAuth
-from openlp.plugins.planningcenter.lib.planningcenter_api import PlanningCenterAPI, SplitLyricsIntoVerses, ManagerThatSavesSongAsTemporary
-from openlp.plugins.songs.lib.importers.songimport import SongImport
-from openlp.plugins.songs.lib.db import Song
-from openlp.plugins.custom.lib.db import CustomSlide
-from openlp.plugins.custom.lib import CustomXMLBuilder
+from openlp.plugins.planningcenter.lib.customimport import PlanningCenterCustomImport
+from openlp.plugins.planningcenter.lib.planningcenter_api import PlanningCenterAPI
+from openlp.plugins.planningcenter.lib.songimport import PlanningCenterSongImport
 
 log = logging.getLogger(__name__)
 
@@ -255,9 +253,10 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         service_manager.main_window.display_progress_bar(len(planning_center_items_dict['data']))
         # convert the planning center dict to Songs and Add them to the ServiceManager
         pco_id_to_openlp_id = {}
-        temp_manager = ManagerThatSavesSongAsTemporary()
         for item in planning_center_items_dict['data']:
             item_title = item['attributes']['title']
+            media_type = ''
+            openlp_id = -1
             if item['attributes']['item_type'] == 'song':
                 arrangement_id = item['relationships']['arrangement']['data']['id']
                 song_id = item['relationships']['song']['data']['id']
@@ -277,67 +276,39 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
                     lyrics = arrangement_data['attributes']['lyrics']
                     arrangement_updated_at = datetime.strptime(arrangement_data['attributes']['updated_at'], '%Y-%m-%dT%H:%M:%SZ')
                     # start importing the song
-                    pco_import = SongImport(temp_manager,filename=None)
-                    pco_import.set_defaults()
-                    pco_import.title = item_title
-                    pco_import.theme_name = self.song_theme_selection_combo_box.currentText()
-                    if author:
-                        pco_import.parse_author(song_data['attributes']['author'])
-                    verses = []
-                    verses = SplitLyricsIntoVerses(lyrics)
-                    for verse in verses:
-                        if len(verse['verse_type']):
-                            verse_def = verse['verse_type'] + verse['verse_number']
-                            pco_import.add_verse(verse_text=verse['verse_text'], verse_def=verse_def)
-                        else:
-                            pco_import.add_verse(verse_text=verse['verse_text'])
-                    pco_import.finish()
-                    openlp_id = temp_manager.song_id
+                    pco_import = PlanningCenterSongImport()
+                    theme_name = self.song_theme_selection_combo_box.currentText()
+                    openlp_id = pco_import.add_song(item_title,author,lyrics,theme_name,arrangement_updated_at)
                     pco_id_to_openlp_id[song_id] = openlp_id
 
                 openlp_id = pco_id_to_openlp_id[song_id]
-                # set the last_updated date/time based on the PCO date/time so I can look for updates
-                song = temp_manager.get_object(Song, openlp_id)
-                song.last_modified = arrangement_updated_at
-                temp_manager.save_object(song)
-                # get the current values of these values so I can set them back to this value
-                songs = Registry().get('songs')
-                previous_remote_triggered = songs.remote_triggered
-                previous_remote_song = songs.remote_song
-                # turn on remote song feature to add to service
-                songs.remote_triggered = True
-                songs.remote_song = openlp_id
-                songs.add_to_service(remote=openlp_id)
-                # reset values to their previous values
-                songs.remote_triggered = previous_remote_triggered
-                songs.remote_song = previous_remote_song
+                media_type = 'songs'
             else:
                 """ 
                 PCO has deprecated their custom slide interface and they are 
                 planning to eliminate it in mid-2019, so this interface will not 
                 support their custom slides except to create a custom slide 
-                placeholder
+                placeholder with just the title
                 """
-                custom_slide = CustomSlide()
-                custom_slide.title = item_title
-                sxml = CustomXMLBuilder()
-                sxml.add_verse_to_lyrics('custom', str(1), item_title)
-                custom_slide.text = str(sxml.extract_xml(), 'utf-8')
-                custom_slide.credits = 'pco'
-                custom_slide.theme_name = self.slide_theme_selection_combo_box.currentText()
-                custom = Registry().get('custom')
-                custom_db_manager = custom.plugin.db_manager
-                custom_db_manager.save_object(custom_slide)
-                previous_remote_triggered = custom.remote_triggered
-                previous_remote_custom = custom.remote_custom
-                # turn on remote feature to add to service
-                custom.remote_triggered = True
-                custom.remote_custom = custom_slide.id
-                custom.add_to_service(remote=custom_slide.id)
-                # reset values to their previous values
-                custom.remote_triggered = previous_remote_triggered
-                custom.remote_custom = previous_remote_custom
+                theme_name = self.slide_theme_selection_combo_box.currentText()
+                openlp_id = PlanningCenterCustomImport(item_title,theme_name)
+                media_type = 'custom'
             
+            # get the current values of these values so I can set them back to this value
+            media_type_plugin = Registry().get(media_type)
+            # the variable suffix names below for "songs" is "song", so change media_type to song
+            media_type_suffix = media_type
+            if media_type == 'songs':
+                media_type_suffix = 'song'
+            previous_remote_triggered = media_type_plugin.remote_triggered
+            previous_remote_value = getattr(media_type_plugin, "remote_{0}".format(media_type_suffix))
+            # turn on remote song feature to add to service
+            media_type_plugin.remote_triggered = True
+            setattr(media_type_plugin,"remote_{0}".format(media_type_suffix), openlp_id)
+            media_type_plugin.add_to_service(remote=openlp_id)
+            # reset values to their previous values
+            media_type_plugin.remote_triggered = previous_remote_triggered
+            setattr(media_type_plugin,"remote_{0}".format(media_type_suffix), previous_remote_value)
             service_manager.main_window.increment_progress_bar()
                     
         if update:
