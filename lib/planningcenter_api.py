@@ -50,10 +50,9 @@ class PlanningCenterAPI:
             The production default should be False """
         self.airplane_mode = False
         module_directory = os.path.dirname(__file__)
-        airplane_mode_directory = "{0}/airplane_mode".format(module_directory)
-        if os.path.isdir(airplane_mode_directory):
+        self.airplane_mode_directory = "{0}/airplane_mode".format(module_directory)
+        if os.path.isdir(self.airplane_mode_directory):
             self.airplane_mode = True
-            self.airplane_mode_directory = airplane_mode_directory
         
     def GetFromServicesAPI(self,url_suffix):
         """
