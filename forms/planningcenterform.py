@@ -21,7 +21,7 @@
 # Temple Place, Suite 330, Boston, MA 02111-1307 USA                          #
 ###############################################################################
 """
-The :mod:`~openlp.plugins.planningcenter.forms.planningcenterform` module contains the GUI for the PlanningCenter importer
+The :mod:`~openlp.plugins.planningcenter.forms.planningcenterform` module contains the GUI for the PlanningCenter Service importer
 """
 
 import logging
@@ -74,6 +74,9 @@ class PlanningCenterAuthForm(QtWidgets.QDialog, Ui_PlanningCenterDiaglogAuth):
         return QtWidgets.QDialog.exec(self)
     
     def on_delete_credentials_button_clicked(self):
+        """
+        Deletes the credentials
+        """
         Settings().setValue("planningcenter/application_id",'')
         Settings().setValue("planningcenter/secret",'')
         self.done(1)
@@ -186,11 +189,12 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         return QtWidgets.QDialog.done(self, r)
 
     def on_edit_auth_button_clicked(self):
-        # open the edit auth screen
+        """
+        Open the edit auth screen
+        """
         auth_form = PlanningCenterAuthForm(self)
         auth_form.initialise()
         auth_form.exec()
-        
         self.done(1)
         
     def on_service_type_combobox_changed(self):
@@ -230,6 +234,10 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
             self.update_existing_button.setEnabled(True)
 
     def on_update_existing_button_clicked(self):
+        """
+        Call the import function but tell it to also do an update so that it can 
+        keep changed items
+        """
         self.on_import_as_new_button_clicked(True)
 
     def on_import_as_new_button_clicked(self, update = False):
@@ -331,14 +339,14 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
                                 service_manager.service_items[service_index] = old_service_item
                             break
                     elif old_service_item['service_item'].name == 'custom' and service_item['service_item'].name == 'custom':
-                        # we don't get actual slide content from the V2 PC API, so all we create by default is a 
-                        # single slide with matching title and content.  If the content
-                        # is different between the old serviceitem (previously imported
-                        # from PC and the new content that we are importing now, then
-                        # the assumption is that we updated this content and we want to 
-                        # keep the old content after this update.  If we actually updated
-                        # something on the PC site in this slide, it would have a
-                        # different title because that is all we can get the v2API
+                        """ we don't get actual slide content from the V2 PC API, so all we create by default is a 
+                        single slide with matching title and content.  If the content
+                        is different between the old serviceitem (previously imported
+                        from PC and the new content that we are importing now, then
+                        the assumption is that we updated this content and we want to 
+                        keep the old content after this update.  If we actually updated
+                        something on the PC site in this slide, it would have a
+                        different title because that is all we can get the v2API """
                         if old_service_item['service_item'].title == service_item['service_item'].title:
                             if old_service_item['service_item']._raw_frames != service_item['service_item']._raw_frames:
                                 service_manager.service_items[service_index] = old_service_item
