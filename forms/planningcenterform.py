@@ -357,8 +357,9 @@ class PlanningCenterForm(QtWidgets.QDialog, Ui_PlanningCenterDialog):
         item = service_manager.service_manager_list.topLevelItem(0)
         service_manager.service_manager_list.setCurrentItem(item)
         service_manager.repaint_service_list(-1, -1)
-        self.done(QtWidgets.QDialog.Accepted)
         service_manager.application.set_normal_cursor()
+        self.done(QtWidgets.QDialog.Accepted)
+        
 
     @property
     def application(self):
