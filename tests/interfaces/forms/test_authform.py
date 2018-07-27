@@ -64,68 +64,55 @@ class TestPlanningCenterAuthForm(TestCase, TestMixin):
         del self.form
         del self.main_window
 
-    def ui_defaults_test(self):
+    def basic_display_test(self):
         """
-        Test the PlanningCenterAuthForm defaults are correct
+        Test the PlanningCenterAuthForm displays the default values from Settings
         """
         # GIVEN: An PlanningCenterAuthForm instance
         with patch('PyQt5.QtWidgets.QDialog.exec'):
             # WHEN: The form is shown
             self.form.exec()
-        # THEN: The default values match what is saved in the config
-        self.assertEqual(self.form.application_id_line_edit.text(), self.application_id, 
-                         'The application_id edit box defaults to the value in settings.')
-        self.assertEqual(self.form.secret_line_edit.text(), self.secret,
-                         'The secret edit box defaults to the value in settings.')
+            # THEN: The default values match what is saved in the config
+            self.assertEqual(self.form.application_id_line_edit.text(), self.application_id, 
+                             'The application_id edit box defaults to the value in settings.')
+            self.assertEqual(self.form.secret_line_edit.text(), self.secret,
+                             'The secret edit box defaults to the value in settings.')
 
-#     def type_verse_text_tests(self):
-#         """
-#         Test that typing into the verse text edit box returns the correct text
-#         """
-#         # GIVEN: An instance of the EditVerseForm and some text to type
-#         text = 'Amazing Grace, how sweet the sound!'
-# 
-#         # WHEN: Some verse text is typed into the text edit
-#         QtTest.QTest.keyClicks(self.form.verse_text_edit, text)
-# 
-#         # THEN: The verse text edit should have the verse text in it
-#         self.assertEqual(text, self.form.verse_text_edit.toPlainText(),
-#                          'The verse text edit should have the typed out verse')
-# 
-#     def insert_verse_test(self):
-#         """
-#         Test that clicking the insert button inserts the correct verse marker
-#         """
-#         # GIVEN: An instance of the EditVerseForm
-#         # WHEN: The Insert button is clicked
-#         QtTest.QTest.mouseClick(self.form.insert_button, QtCore.Qt.LeftButton)
-# 
-#         # THEN: The verse text edit should have a Verse:1 in it
-#         self.assertIn('---[Verse:1]---', self.form.verse_text_edit.toPlainText(),
-#                       'The verse text edit should have a verse marker')
-# 
-#     def insert_verse_2_test(self):
-#         """
-#         Test that clicking the up button on the spin box and then clicking the insert button inserts the correct marker
-#         """
-#         # GIVEN: An instance of the EditVerseForm
-#         # WHEN: The spin button and then the Insert button are clicked
-#         QtTest.QTest.keyClick(self.form.verse_number_box, QtCore.Qt.Key_Up)
-#         QtTest.QTest.mouseClick(self.form.insert_button, QtCore.Qt.LeftButton)
-# 
-#         # THEN: The verse text edit should have a Verse:1 in it
-#         self.assertIn('---[Verse:2]---', self.form.verse_text_edit.toPlainText(),
-#                       'The verse text edit should have a "Verse 2" marker')
-# 
-#     def insert_chorus_test(self):
-#         """
-#         Test that clicking the verse type combo box and then clicking the insert button inserts the correct marker
-#         """
-#         # GIVEN: An instance of the EditVerseForm
-#         # WHEN: The verse type combo box and then the Insert button are clicked
-#         QtTest.QTest.keyClick(self.form.verse_type_combo_box, QtCore.Qt.Key_Down)
-#         QtTest.QTest.mouseClick(self.form.insert_button, QtCore.Qt.LeftButton)
-# 
-#         # THEN: The verse text edit should have a Chorus:1 in it
-#         self.assertIn('---[Chorus:1]---', self.form.verse_text_edit.toPlainText(),
-#                       'The verse text edit should have a "Chorus 1" marker')
+    def click_delete_credentials_button_test(self):
+        """
+        Test that clicking the delete credentials button deletes the credentials from Settings
+        """
+        # GIVEN: An instance of the PlanningCenterAuthForm
+        with patch('PyQt5.QtWidgets.QDialog.exec'):
+            # WHEN: The form is shown
+            self.form.exec()
+            # WHEN: The "delete credentials" button is clicked
+            QtTest.QTest.mouseClick(self.form.delete_credentials_button, QtCore.Qt.LeftButton)
+            # THEN: The application_id and secret should be set to '' in Settings
+            self.assertEqual(Settings().value('planningcenter/application_id'),'',
+                             'The application_id setting should have been reset.')
+            self.assertEqual(Settings().value('planningcenter/secret'),'',
+                             'The secret setting should have been reset')
+    
+    def click_save_credentials_button_test(self):
+        """
+        Test that we try and save credentials, but they are rejected because they are bad.
+        I do not want to store valid credentials in here because this source is openly
+        available.
+        """
+        # GIVEN: An instance of the PlanningCenterAuthForm
+        with patch('PyQt5.QtWidgets.QDialog.exec'):
+            # WHEN: The form is shown
+            self.form.exec()
+            # WHEN: The "delete credentials" button is clicked with new credentials set
+            application_id = 'def'
+            secret = '456'
+            self.form.application_id_line_edit.setText(application_id)
+            self.form.secret_line_edit.setText(secret)
+            with patch('PyQt5.QtWidgets.QMessageBox'):
+                QtTest.QTest.mouseClick(self.form.save_credentials_button, QtCore.Qt.LeftButton)
+            # THEN: We should test credentials and validate that they did not get saved
+            self.assertNotEqual(Settings().value('planningcenter/application_id'), application_id, 
+                                'The application_id should not have been saved')
+            self.assertNotEqual(Settings().value('planningcenter/secret'), secret,
+                                'The secret code should not have been saved')
