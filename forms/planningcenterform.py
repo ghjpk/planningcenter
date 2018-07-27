@@ -67,8 +67,8 @@ class PlanningCenterAuthForm(QtWidgets.QDialog, Ui_PlanningCenterDiaglogAuth):
         application_id = Settings().value("planningcenter/application_id")
         secret = Settings().value("planningcenter/secret")
         if len(application_id):
-            self.application_id_text_edit.setText(application_id)
-            self.secret_text_edit.setText(secret)
+            self.application_id_line_edit.setText(application_id)
+            self.secret_line_edit.setText(secret)
             self.delete_credentials_button.setEnabled(True)
             
         return QtWidgets.QDialog.exec(self)
@@ -88,8 +88,8 @@ class PlanningCenterAuthForm(QtWidgets.QDialog, Ui_PlanningCenterDiaglogAuth):
         are_credentials_good = self.on_test_credentials_button_clicked()
         if are_credentials_good:
             # save the credentials
-            Settings().setValue("planningcenter/application_id",self.application_id_text_edit.text())
-            Settings().setValue("planningcenter/secret",self.secret_text_edit.text())
+            Settings().setValue("planningcenter/application_id",self.application_id_line_edit.text())
+            Settings().setValue("planningcenter/secret",self.secret_line_edit.text())
         self.done(1)
             
     def done(self, r):
@@ -106,8 +106,8 @@ class PlanningCenterAuthForm(QtWidgets.QDialog, Ui_PlanningCenterDiaglogAuth):
         """
         Tests if the credentials are valid
         """
-        application_id = self.application_id_text_edit.text()
-        secret = self.secret_text_edit.text()
+        application_id = self.application_id_line_edit.text()
+        secret = self.secret_line_edit.text()
         test_auth = PlanningCenterAPI(application_id, secret)
         organization = test_auth.CheckCredentials()
         if len(organization):
