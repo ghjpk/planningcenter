@@ -50,16 +50,16 @@ class Ui_PlanningCenterDiaglogAuth(object):
         
         # Application ID GUI Elements
         self.application_id_label = QtWidgets.QLabel(planningcenter_dialog_auth)
-        self.application_id_text_edit = QtWidgets.QLineEdit(planningcenter_dialog_auth)
-        self.application_id_text_edit.setMaxLength(64)
-        self.auth_layout.addRow(self.application_id_label, self.application_id_text_edit)
-        self.application_id_text_edit.setFocus()
+        self.application_id_line_edit = QtWidgets.QLineEdit(planningcenter_dialog_auth)
+        self.application_id_line_edit.setMaxLength(64)
+        self.auth_layout.addRow(self.application_id_label, self.application_id_line_edit)
+        self.application_id_line_edit.setFocus()
         
         # Secret GUI Elements (shhhh... it's a secret...)
         self.secret_label = QtWidgets.QLabel(planningcenter_dialog_auth)
-        self.secret_text_edit = QtWidgets.QLineEdit(planningcenter_dialog_auth)
-        self.secret_text_edit.setMaxLength(64)
-        self.auth_layout.addRow(self.secret_label, self.secret_text_edit)
+        self.secret_line_edit = QtWidgets.QLineEdit(planningcenter_dialog_auth)
+        self.secret_line_edit.setMaxLength(64)
+        self.auth_layout.addRow(self.secret_label, self.secret_line_edit)
         
         # Buttons
         self.button_layout = QtWidgets.QDialogButtonBox(planningcenter_dialog_auth)
