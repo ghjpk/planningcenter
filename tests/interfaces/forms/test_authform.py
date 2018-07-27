@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 # vim: autoindent shiftwidth=4 expandtab textwidth=120 tabstop=4 softtabstop=4
-from openlp.plugins.planningcenter.planningcenterplugin import planningcenterplugin
-import abc
-
 ###############################################################################
 # OpenLP - Open Source Lyrics Projection                                      #
 # --------------------------------------------------------------------------- #
@@ -23,22 +20,22 @@ import abc
 # Temple Place, Suite 330, Boston, MA 02111-1307 USA                          #
 ###############################################################################
 """
-Package to test the openlp.plugins.planningcenter.forms.planningcenterform package.
+Package to test the openlp.plugins.planningcenter.forms.editauthform package.
 """
 from unittest import TestCase
 
 from PyQt5 import QtCore, QtTest, QtWidgets
 
 from openlp.core.common import Registry, Settings
-from openlp.plugins.planningcenter.forms.planningcenterform import PlanningCenterAuthForm
+from openlp.plugins.planningcenter.forms.editauthform import EditAuthForm
 from openlp.plugins.planningcenter import planningcenterplugin
 
 from tests.helpers.testmixin import TestMixin
-from tests.interfaces import MagicMock, patch
+from tests.interfaces import patch
 
-class TestPlanningCenterAuthForm(TestCase, TestMixin):
+class TestEditAuthForm(TestCase, TestMixin):
     """
-    Test the PlanningCenterAuthForm class
+    Test the EditAuthForm class
     """
 
     def setUp(self):
@@ -55,7 +52,7 @@ class TestPlanningCenterAuthForm(TestCase, TestMixin):
         Settings().setValue('planningcenter/secret', self.secret)
         # init the planning center plugin
         planning_center_plugin = planningcenterplugin.planningcenterplugin()
-        self.form = PlanningCenterAuthForm()
+        self.form = EditAuthForm()
 
     def tearDown(self):
         """
@@ -66,7 +63,7 @@ class TestPlanningCenterAuthForm(TestCase, TestMixin):
 
     def basic_display_test(self):
         """
-        Test the PlanningCenterAuthForm displays the default values from Settings
+        Test the EditAuthForm displays the default values from Settings
         """
         # GIVEN: An PlanningCenterAuthForm instance
         with patch('PyQt5.QtWidgets.QDialog.exec'):

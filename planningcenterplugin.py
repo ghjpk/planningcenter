@@ -49,7 +49,9 @@ except ImportError:
 from openlp.core.common import Registry, Settings, translate
 from openlp.core.lib import Plugin, StringContent
 from openlp.core.lib.ui import create_action
-from openlp.plugins.planningcenter.forms.planningcenterform import PlanningCenterForm, PlanningCenterAuthForm
+from openlp.plugins.planningcenter.forms.selectplanform import SelectPlanForm
+from openlp.plugins.planningcenter.forms.editauthform import EditAuthForm
+
 
 __default_settings__ = {
     'planningcenter/application_id': '',
@@ -98,9 +100,9 @@ class planningcenterplugin(Plugin):
         self.secret = Settings().value("planningcenter/secret")
         
         if len(self.application_id) == 0 or len(self.secret) == 0:
-            self.planningcenterselect_form = PlanningCenterAuthForm(Registry().get('main_window'), self)
+            self.planningcenterselect_form = EditAuthForm(Registry().get('main_window'), self)
         else:
-            self.planningcenterselect_form = PlanningCenterForm(Registry().get('main_window'), self)
+            self.planningcenterselect_form = SelectPlanForm(Registry().get('main_window'), self)
         self.planningcenterselect_form.initialise()
         self.planningcenterselect_form.exec()
 
