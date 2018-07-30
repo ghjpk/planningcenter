@@ -23,13 +23,10 @@
 Package to test the openlp.plugins.planningcenter.forms.editauthform package.
 """
 from unittest import TestCase
-
 from PyQt5 import QtCore, QtTest, QtWidgets
-
 from openlp.core.common import Registry, Settings
 from openlp.plugins.planningcenter.forms.editauthform import EditAuthForm
 from openlp.plugins.planningcenter import planningcenterplugin
-
 from tests.helpers.testmixin import TestMixin
 from tests.interfaces import patch
 
@@ -50,7 +47,7 @@ class TestEditAuthForm(TestCase, TestMixin):
         self.secret = '123' 
         Settings().setValue('planningcenter/application_id', self.application_id)
         Settings().setValue('planningcenter/secret', self.secret)
-        # init the planning center plugin
+        # init the planning center plugin so we have default values defined for Settings()
         planning_center_plugin = planningcenterplugin.planningcenterplugin()
         self.form = EditAuthForm()
 
