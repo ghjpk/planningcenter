@@ -45,10 +45,13 @@ class SelectPlanForm(QtWidgets.QDialog, Ui_SelectPlanDialog):
     The :class:`PlanningCenterForm` class is the PlanningCenter dialog.
     """
 
-    def __init__(self, parent=None, plugin=None, db_manager=None):
+    def __init__(self, parent=None, plugin=None):
         QtWidgets.QDialog.__init__(self, parent, QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint)
         self.plugin = plugin
-        self.db_manager = db_manager
+        # create an Planning Center API Object
+        application_id = Settings().value("planningcenter/application_id")
+        secret = Settings().value("planningcenter/secret")
+        self.planning_center_api = PlanningCenterAPI(application_id,secret)
         self.setup_ui(self)
 
     def initialise(self):
@@ -69,13 +72,7 @@ class SelectPlanForm(QtWidgets.QDialog, Ui_SelectPlanDialog):
         self.update_existing_button.clicked.connect(self.on_update_existing_button_clicked)
         self.edit_auth_button.clicked.connect(self.on_edit_auth_button_clicked)
         self.import_as_new_button.setEnabled(False)
-        self.update_existing_button.setEnabled(False)
-        
-        # create an Planning Center API Object
-        application_id = Settings().value("planningcenter/application_id")
-        secret = Settings().value("planningcenter/secret")
-        self.planning_center_api = PlanningCenterAPI(application_id,secret)
-        
+        self.update_existing_button.setEnabled(False)        
         # set the Service Type Dropdown Box from PCO
         service_types_list = self.planning_center_api.GetServiceTypeList()
         self.service_type_combo_box.clear()
@@ -83,7 +80,6 @@ class SelectPlanForm(QtWidgets.QDialog, Ui_SelectPlanDialog):
             self.service_type_combo_box.addItem(service_type['attributes']['name'],service_type['id'])
         self.service_type_combo_box.setCurrentIndex(0)
         self.on_plan_selection_combobox_changed()
-        
         # Set the 2 lists of themes
         theme_manager = Registry().get('theme_manager')
         for theme in theme_manager.get_themes():
