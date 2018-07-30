@@ -165,8 +165,7 @@ class SelectPlanForm(QtWidgets.QDialog, Ui_SelectPlanDialog):
             old_service_items = service_manager.service_items.copy()
             service_manager.new_file()
         else:
-            blah=service_manager.on_new_service_clicked()
-            print(blah)
+            service_manager.on_new_service_clicked()
         # we only continue here if the service_manager is now empty
         if len(service_manager.service_items) == 0:
             service_manager.application.set_busy_cursor()
