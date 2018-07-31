@@ -131,7 +131,8 @@ class SelectPlanForm(QtWidgets.QDialog, Ui_SelectPlanDialog):
                 plan_datetime = datetime.strptime(plan['attributes']['dates'],'%B %d, %Y')
                 plan_date = date(plan_datetime.year, plan_datetime.month, plan_datetime.day)
                 # if we have any date that matches today or in the future, select it
-                if plan_date >= date.today():
+                today = date.today()
+                if plan_date >= today:
                     self.plan_selection_combo_box.setCurrentIndex(self.plan_selection_combo_box.count()-1)
                     self.import_as_new_button.setEnabled(True)
                     self.update_existing_button.setEnabled(True)
