@@ -189,4 +189,24 @@ class TestSelectPlanForm(TestCase, TestMixin):
         mock_add_slide.assert_called_once()
         self.assertEqual(mock_add_song.call_count, 2, 'Add_song should be called 2 times')
         
-    
+    def verify_service_refreshed_when_refresh_button_clicked_test(self):
+        """
+        Test that a service is refreshed when the "Refresh Service" button is clicked
+        """
+        # GIVEN: An SelectPlanForm instance with airplane mode enabled, resources available, many mocked functions
+        with patch('PyQt5.QtWidgets.QDialog.exec'), \
+                patch('openlp.core.lib.db.Manager.__init__'), \
+                patch('openlp.plugins.planningcenter.lib.songimport.PlanningCenterSongImport.add_song') as mock_add_song, \
+                patch('openlp.plugins.planningcenter.lib.customimport.PlanningCenterCustomImport.add_slide') as mock_add_slide:
+            Registry().register('application', MagicMock())
+            Registry().register('service_manager', MagicMock())
+            Registry().register('songs', MagicMock())
+            Registry().register('custom', MagicMock())
+            self.form.exec()
+            # WHEN: The Service Type combo is set to index 1 and the Select Plan combo box is set to index 3 and the "Import New" button is clicked
+            self.form.service_type_combo_box.setCurrentIndex(1)
+            self.form.plan_selection_combo_box.setCurrentIndex(3)
+            QtTest.QTest.mouseClick(self.form.update_existing_button, QtCore.Qt.LeftButton)
+        # THEN: The add_song function was called 2 times and add_slide once
+        mock_add_slide.assert_called_once()
+        self.assertEqual(mock_add_song.call_count, 2, 'Add_song should be called 2 times')

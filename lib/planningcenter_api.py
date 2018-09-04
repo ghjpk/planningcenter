@@ -141,6 +141,6 @@ class PlanningCenterAPI:
  
         :param plan_id: The ID of the Plan from which to query all Plan Items.
         """        
-        itemsURLSuffix = "service_types/{0}/plans/{1}/items?include=song,arrangement".format(self.current_service_type_id,plan_id)
+        itemsURLSuffix = "service_types/{0}/plans/{1}/items?include=song,arrangement&per_page=100".format(self.current_service_type_id,plan_id)
         items = self.GetFromServicesAPI(itemsURLSuffix)
         return items

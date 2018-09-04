@@ -212,7 +212,7 @@ class SelectPlanForm(QtWidgets.QDialog, Ui_SelectPlanDialog):
                     PCO has deprecated their custom slide interface and they are 
                     planning to eliminate it in mid-2019, so this interface will not 
                     support their custom slides except to create a custom slide 
-                    placeholder with just the title
+                    with just a title
                     """
                     theme_name = self.slide_theme_selection_combo_box.currentText()
                     custom_import = PlanningCenterCustomImport()
