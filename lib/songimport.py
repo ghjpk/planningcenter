@@ -60,13 +60,17 @@ class PlanningCenterSongImport(SongImport):
         self.theme_name = theme_name
         if author:
             self.parse_author(author)
-        verses = self._SplitLyricsIntoVerses(lyrics)
-        for verse in verses:
-            if len(verse['verse_type']):
-                verse_def = verse['verse_type'] + verse['verse_number']
-                self.add_verse(verse_text=verse['verse_text'], verse_def=verse_def)
-            else:
-                self.add_verse(verse_text=verse['verse_text'])
+        # handle edge condition where a song has no lyrics set
+        if lyrics is None:
+            self.add_verse(item_title)
+        else:
+            verses = self._SplitLyricsIntoVerses(lyrics)
+            for verse in verses:
+                if len(verse['verse_type']):
+                    verse_def = verse['verse_type'] + verse['verse_number']
+                    self.add_verse(verse_text=verse['verse_text'], verse_def=verse_def)
+                else:
+                    self.add_verse(verse_text=verse['verse_text'])
         self.finish()
         openlp_id = self.manager.song_id
         # set the last_updated date/time based on the PCO date/time so I can look for updates
