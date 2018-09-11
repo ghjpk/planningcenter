@@ -51,6 +51,7 @@ from openlp.core.lib import Plugin, StringContent
 from openlp.core.lib.ui import create_action
 from openlp.plugins.planningcenter.forms.selectplanform import SelectPlanForm
 from openlp.plugins.planningcenter.forms.editauthform import EditAuthForm
+from openlp.plugins.planningcenter.lib.version import plugin_version
 
 
 __default_settings__ = {
@@ -68,7 +69,7 @@ class planningcenterplugin(Plugin):
         """
         Create and set up the PlanningCenter plugin.
         """
-        super(planningcenterplugin, self).__init__('planningcenter', __default_settings__, version='0.2')
+        super(planningcenterplugin, self).__init__('planningcenter', __default_settings__, version=plugin_version)
         self.planningcenterselect_form = None
 
     def initialise(self):
@@ -85,7 +86,7 @@ class planningcenterplugin(Plugin):
         :param import_menu: The actual **Import** menu item, so that your actions can use it as their parent.
         """
         self.import_planningcenterelect_item = create_action(
-            import_menu, 'import_planningcenterelect_item', text=translate('planningcenterplugin', 'Planning Center Service'),
+            import_menu, 'import_planningcenterelect_item', text=translate('planningcenterplugin', 'Planning Center Service %s' % (plugin_version)),
             statustip=translate('planningcenterplugin', 'Import Planning Center Service Plan from Planning Center Online.'),
             triggers=self.on_import_planningcenterelect_item_triggered
         )
