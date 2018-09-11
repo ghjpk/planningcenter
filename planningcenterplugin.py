@@ -86,7 +86,7 @@ class planningcenterplugin(Plugin):
         :param import_menu: The actual **Import** menu item, so that your actions can use it as their parent.
         """
         self.import_planningcenterelect_item = create_action(
-            import_menu, 'import_planningcenterelect_item', text=translate('planningcenterplugin', 'Planning Center Service %s' % (plugin_version)),
+            import_menu, 'import_planningcenterelect_item', text=translate('planningcenterplugin', 'Planning Center Service'),
             statustip=translate('planningcenterplugin', 'Import Planning Center Service Plan from Planning Center Online.'),
             triggers=self.on_import_planningcenterelect_item_triggered
         )
