@@ -6,6 +6,7 @@
 # --------------------------------------------------------------------------- #
 # Copyright (c) 2008-2017 OpenLP Developers                                   #
 # Copyright (c) 2018 John Kirkland                                            #
+# Copyright (c) 2018 Stephen G Brown                                          #
 # --------------------------------------------------------------------------- #
 # This program is free software; you can redistribute it and/or modify it     #
 # under the terms of the GNU General Public License as published by the Free  #
