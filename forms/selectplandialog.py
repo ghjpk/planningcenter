@@ -74,7 +74,8 @@ class Ui_SelectPlanDialog(object):
         """
         Translate the GUI.
         """
-        planningcenter_dialog.setWindowTitle(translate('PlanningCenterPlugin.PlanningCenterForm', 'Planning Center Online Service Importer'))
+        from openlp.plugins.planningcenter.lib.version import plugin_version
+        planningcenter_dialog.setWindowTitle(translate('PlanningCenterPlugin.PlanningCenterForm', 'Planning Center Online Service Importer %s' % (plugin_version)))
         self.service_type_label.setText(translate('PlanningCenterPlugin.PlanningCenterForm', 'Service Type'))
         self.plan_selection_label.setText(translate('PlanningCenterPlugin.PlanningCenterForm', 'Select Plan'))
         self.import_as_new_button.setText(translate('PlanningCenterPlugin.PlanningCenterForm', 'Import New'))
