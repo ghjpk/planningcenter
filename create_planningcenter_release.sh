@@ -28,7 +28,7 @@ git commit -m "creating build version $1"
 git archive -o planningcenter_$VERSION.zip --prefix=planningcenter/ -9 master
 git add planningcenter_$VERSION.zip
 git commit -m "adding the finished zip file to the repository"
-git tag "$1"
+git tag -a "$1" -m "creating build version $1"
 
 git push
 

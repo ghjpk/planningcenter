@@ -127,8 +127,8 @@ class SelectPlanForm(QtWidgets.QDialog, Ui_SelectPlanDialog):
             # Get Today's date and see if it is listed... if it is, then select it in the combobox
             for plan in plan_list:
                 self.plan_selection_combo_box.addItem(plan['attributes']['dates'],plan['id'])
-                # dates=str: July 29, 2018
-                plan_datetime = datetime.strptime(plan['attributes']['dates'],'%B %d, %Y')
+                # sort_date=str: 2018-12-21T19:00:00Z
+                plan_datetime = datetime.strptime(plan['attributes']['sort_date'].rstrip("Z"),'%Y-%m-%dT%H:%M:%S')
                 plan_date = date(plan_datetime.year, plan_datetime.month, plan_datetime.day)
                 # if we have any date that matches today or in the future, select it
                 today = date.today()
@@ -198,7 +198,7 @@ class SelectPlanForm(QtWidgets.QDialog, Ui_SelectPlanDialog):
                                 break
                         author = song_data['attributes']['author']
                         lyrics = arrangement_data['attributes']['lyrics']
-                        arrangement_updated_at = datetime.strptime(arrangement_data['attributes']['updated_at'], '%Y-%m-%dT%H:%M:%SZ')
+                        arrangement_updated_at = datetime.strptime(arrangement_data['attributes']['updated_at'].rstrip("Z"), '%Y-%m-%dT%H:%M:%S')
                         # start importing the song
                         pco_import = PlanningCenterSongImport()
                         theme_name = self.song_theme_selection_combo_box.currentText()

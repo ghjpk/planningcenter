@@ -6,6 +6,7 @@
 # --------------------------------------------------------------------------- #
 # Copyright (c) 2008-2017 OpenLP Developers                                   #
 # Copyright (c) 2018 John Kirkland                                            #
+# Copyright (c) 2018 Stephen G Brown                                          #
 # --------------------------------------------------------------------------- #
 # This program is free software; you can redistribute it and/or modify it     #
 # under the terms of the GNU General Public License as published by the Free  #
@@ -51,6 +52,7 @@ from openlp.core.lib import Plugin, StringContent
 from openlp.core.lib.ui import create_action
 from openlp.plugins.planningcenter.forms.selectplanform import SelectPlanForm
 from openlp.plugins.planningcenter.forms.editauthform import EditAuthForm
+from openlp.plugins.planningcenter.lib.version import plugin_version
 
 
 __default_settings__ = {
@@ -68,7 +70,7 @@ class planningcenterplugin(Plugin):
         """
         Create and set up the PlanningCenter plugin.
         """
-        super(planningcenterplugin, self).__init__('planningcenter', __default_settings__, version='0.2')
+        super(planningcenterplugin, self).__init__('planningcenter', __default_settings__, version=plugin_version)
         self.planningcenterselect_form = None
 
     def initialise(self):
