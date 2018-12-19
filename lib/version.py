@@ -1,1 +1,1 @@
-plugin_version="0.3.1alpha"
+plugin_version="0.4"
