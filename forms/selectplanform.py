@@ -215,8 +215,9 @@ class SelectPlanForm(QtWidgets.QDialog, Ui_SelectPlanDialog):
                     with just a title
                     """
                     theme_name = self.slide_theme_selection_combo_box.currentText()
+                    html_details = item['attributes']['html_details']
                     custom_import = PlanningCenterCustomImport()
-                    openlp_id = custom_import.add_slide(item_title,theme_name)
+                    openlp_id = custom_import.add_slide(item_title,html_details,theme_name)
                     media_type = 'custom'
                 
                 # get the current values of these values so I can set them back to this value
