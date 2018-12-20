@@ -36,6 +36,7 @@ from openlp.plugins.planningcenter.forms.editauthform import EditAuthForm
 from openlp.plugins.planningcenter.lib.customimport import PlanningCenterCustomImport
 from openlp.plugins.planningcenter.lib.planningcenter_api import PlanningCenterAPI
 from openlp.plugins.planningcenter.lib.songimport import PlanningCenterSongImport
+from openlp.plugins.bibles.lib import parse_reference
 
 log = logging.getLogger(__name__)
 
@@ -208,35 +209,41 @@ class SelectPlanForm(QtWidgets.QDialog, Ui_SelectPlanDialog):
                     openlp_id = pco_id_to_openlp_id[song_id]
                     media_type = 'songs'
                 else:
-                    """ 
-                    PCO has deprecated their custom slide interface and they are 
-                    planning to eliminate it in mid-2019, so this interface will not 
-                    support their custom slides except to create a custom slide 
-                    with just a title
-                    """
-                    theme_name = self.slide_theme_selection_combo_box.currentText()
+                    # if we have "details" for the item, create slides from those
                     html_details = item['attributes']['html_details']
+                    theme_name = self.slide_theme_selection_combo_box.currentText()
                     custom_import = PlanningCenterCustomImport()
                     openlp_id = custom_import.add_slide(item_title,html_details,theme_name)
                     media_type = 'custom'
-                
-                # get the current values of these values so I can set them back to this value
+
+                # add the media to the service
                 media_type_plugin = Registry().get(media_type)
                 # the variable suffix names below for "songs" is "song", so change media_type to song
                 media_type_suffix = media_type
                 if media_type == 'songs':
                     media_type_suffix = 'song'
-                previous_remote_triggered = media_type_plugin.remote_triggered
-                previous_remote_value = getattr(media_type_plugin, "remote_{0}".format(media_type_suffix))
                 # turn on remote song feature to add to service
                 media_type_plugin.remote_triggered = True
                 setattr(media_type_plugin,"remote_{0}".format(media_type_suffix), openlp_id)
                 media_type_plugin.add_to_service(remote=openlp_id)
-                # reset values to their previous values
-                media_type_plugin.remote_triggered = previous_remote_triggered
-                setattr(media_type_plugin,"remote_{0}".format(media_type_suffix), previous_remote_value)
+                # also add verse references if they are there
+                if media_type == 'custom' and not html_details:                 
+                    # check if the slide title is also a verse reference
+                    # get a reference to the bible manager
+                    bible_media = Registry().get('bibles')
+                    bibles = bible_media.plugin.manager.get_bibles()
+                    # get the current bible selected from the bibles plugin screen
+                    bible = bible_media.quickVersionComboBox.currentText()
+                    language_selection = bible_media.plugin.manager.get_language_selection(bible)
+                    # replace long dashes with normal dashes -- why do these get inserted in PCO?
+                    tmp_item_title = re.sub('–','-',item_title)
+                    ref_list = parse_reference(tmp_item_title, bibles[bible], language_selection)
+                    if ref_list:
+                        bible_media.search_results = bibles[bible].get_verses(ref_list)
+                        bible_media.list_view.clear()
+                        bible_media.display_results(bible, '')
+                        bible_media.add_to_service()
                 service_manager.main_window.increment_progress_bar()
-                        
             if update:
                 for old_service_item in old_service_items:
                     # see if this service_item contained within the current set of service items

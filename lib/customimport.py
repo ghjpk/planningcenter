@@ -30,6 +30,7 @@ that was used to import songs from Planning Center.
 from openlp.plugins.custom.lib.db import CustomSlide
 from openlp.plugins.custom.lib import CustomXMLBuilder
 from openlp.core.common import Registry
+from openlp.core.lib import ServiceItem
 import re
 
 
@@ -50,26 +51,7 @@ class PlanningCenterCustomImport(object):
             slide_content = item_title
         else:
             # we need non-html here, but the input is html
-            # convert <br> into new lines
-            html_details = re.sub(r'<br>','\n',html_details)
-            # dump the rest of the html
-            html_details = re.sub(r'(<!--.*?-->|<[^>]*>)','',html_details)
-            # we now need to deal with extremely long strings and add line breaks
-            # every so often... i'm thinking break up lines longer than 80 chars every 10 words
-            for line in html_details.split("\n"):
-                if len(line) <= 80:
-                    slide_content += line + "\n"
-                else:
-                    new_line = ''
-                    counter = 0
-                    for word in line.split():
-                        if counter <= 9:
-                            new_line += word + " "
-                            counter += 1
-                        else:
-                            new_line += word + "\n"
-                            counter = 0
-                    slide_content += new_line + "\n"
+            slide_content = self._process_details(html_details)
         sxml.add_verse_to_lyrics('custom', str(1), slide_content)
         custom_slide.text = str(sxml.extract_xml(), 'utf-8')
         custom_slide.credits = 'pco'
@@ -78,3 +60,33 @@ class PlanningCenterCustomImport(object):
         custom_db_manager = custom.plugin.db_manager
         custom_db_manager.save_object(custom_slide)
         return custom_slide.id
+    """
+    Converts the "details" section of a PCO slide into text suitable for 
+    slides in OLP
+    
+    :param html_details: The html_details string from the PCO API
+    """
+    def _process_details(self,html_details):
+        slide_content = ''
+        # convert <br> into new lines
+        html_details = re.sub(r'<br>','\n',html_details)
+        # dump the rest of the html
+        html_details = re.sub(r'(<!--.*?-->|<[^>]*>)','',html_details)
+        # we now need to deal with extremely long strings and add line breaks
+        # every so often... i'm thinking break up lines longer than 80 chars every 10 words
+        for line in html_details.split("\n"):
+            if len(line) <= 80:
+                slide_content += line + "\n"
+            else:
+                new_line = ''
+                counter = 0
+                for word in line.split():
+                    if counter <= 9:
+                        new_line += word + " "
+                        counter += 1
+                    else:
+                        new_line += word + "\n"
+                        counter = 0
+                slide_content += new_line + "\n"
+        return slide_content
+        
