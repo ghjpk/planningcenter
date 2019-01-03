@@ -89,14 +89,20 @@ class PlanningCenterSongImport(SongImport):
         :param lyrics: Lyrics String from Planning Center
         """
         # create a regular expression for potential VERSE,CHORUS tags included inline inside the lyrics...
-        verseMarkerPattern = re.compile('^(v|verse|c|chorus|bridge|prechorus|instrumental|intro|outro|vamp|breakdown|ending|interlude|tag|misc)\s*(\d*)$',re.IGNORECASE)
+        verse_marker_pattern = re.compile('^(v|verse|c|chorus|bridge|prechorus|instrumental|intro|outro|vamp|breakdown|ending|interlude|tag|misc)\s*(\d*)$',re.IGNORECASE)
+        # create regex for an END marker.  content after this marker will be ignored
+        end_marker_pattern = re.compile('^{(<.*?>)?END(<.*?>)?}$')
         verse_type = ''
         verse_number = ''
         verse_text = ''
+        is_end_marker = False
         output_verses = []
         input_verses = lyrics.split("\n\n")
         for verse in input_verses:
             for line in verse.split("\n"):
+                if end_marker_pattern.search(line):
+                    # see if this is the end marker (stop parsing verses if it is)
+                    is_end_marker = True
                 # strip out curly braces and the content inside {}
                 line = re.sub('{.*?}+','',line)
                 # strip out any extraneous tags <...>
@@ -105,15 +111,18 @@ class PlanningCenterSongImport(SongImport):
                 line = line.rstrip()
                 line = line.lstrip()
                 
-                regex_match = verseMarkerPattern.search(line)
+                regex_match = verse_marker_pattern.search(line)
                 if regex_match:
                     if len(verse_text):
+                        # if we have verse_text from the previous verse, submit it now
                         self._add_verse(output_verses, verse_type, verse_number, verse_text)
-                    verse_text = ''
+                        verse_text = ''
                     verse_type = self._lookup_openlp_verse_type(regex_match.group(1))
+                    # if we have a number after the verse marker, capture it here
                     if regex_match.group(2):
                         verse_number = regex_match.group(2)
                     else:
+                        # if empty, let openlp auto-create it for us
                         verse_number = ''
                     continue
                 else:
@@ -124,8 +133,8 @@ class PlanningCenterSongImport(SongImport):
             if len(verse_text):
                 self._add_verse(output_verses, verse_type, verse_number, verse_text)
                 verse_text = ''
-                verse_type = ''
-                verse_number = ''
+                if is_end_marker:
+                    return output_verses
         return output_verses
     
     def _lookup_openlp_verse_type(self,pco_verse_type):
